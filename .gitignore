@@ -8,11 +8,11 @@ __pycache__/
 venv/
 env/
 
-# User data and runtime artifacts
-data/
-logs/
-dist/
-build/
+# User data and runtime artifacts (root only — src/antismurf/data is source code)
+/data/
+/logs/
+/dist/
+/build/
 *.spec.bak
 
 # Local configuration (use config/user.toml.example)
