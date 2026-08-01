@@ -1,0 +1,29 @@
+{
+  "mmr": {
+    "cores": {"survivor": 2573, "kerrigan": 3181},
+    "roles_survivor": [
+      {
+        "role_name": "Spirit",
+        "team_name": "幸存者",
+        "core_mmr": 2573,
+        "class_mmr": 212,
+        "mmr": 2785
+      }
+    ],
+    "roles_kerrigan": [
+      {
+        "role_name": "Kerrigan",
+        "team_name": "凯瑞甘",
+        "core_mmr": 3181,
+        "class_mmr": 96,
+        "mmr": 3277
+      }
+    ]
+  },
+  "played_like": {
+    "games": [
+      {"role": "Kerrigan", "team": 1, "played_like": 2624.76},
+      {"role": "Dark_Templar", "team": 0, "played_like": 2183.91}
+    ]
+  }
+}

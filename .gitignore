@@ -1,0 +1,51 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# User data and runtime artifacts
+data/
+logs/
+dist/
+build/
+*.spec.bak
+
+# Local configuration (use config/user.toml.example)
+config/user.toml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Replay binaries (use scripts/diagnose_replays.py --file locally)
+*.SC2Replay
+*.sc2replay
+!tests/fixtures/**/*.SC2Replay
+!tests/fixtures/**/*.sc2replay
+
+# PyInstaller / packaging scratch
+*.manifest
+*.log
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+credentials.json
+
+# Local tooling (agent workspace config, not part of the repo)
+.reasonix/
+reasonix.toml

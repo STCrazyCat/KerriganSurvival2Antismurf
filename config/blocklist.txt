@@ -1,0 +1,1 @@
+# One player handle per line (format: server-S2-realm-id). Lines starting with # are ignored.

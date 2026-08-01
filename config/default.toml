@@ -1,0 +1,182 @@
+[target_maps]
+names = ["凯瑞甘生存2", "Kerrigan Survival 2"]
+
+[polling]
+interval_sec = 2.5
+interval_in_room_sec = 0.35
+
+[scoring]
+kick_threshold = 100.0
+tier_medium = 20.0
+tier_high = 60.0
+tier_critical = 100.0
+preset = "balanced"
+
+# Legacy rules kept for reference; scoring uses scoring_presets/balanced.toml
+[rules.handle_discriminator_high]
+enabled = true
+threshold = 15000
+weight = 25.0
+
+[rules.handle_discriminator_low]
+enabled = true
+threshold = 1000
+weight = -10.0
+
+[rules.playlike_spike_count]
+enabled = true
+threshold = 3
+weight = 35.0
+
+[rules.playlike_spike_magnitude]
+enabled = true
+threshold = 500
+weight = 25.0
+
+[rules.playlike_lift_avg]
+enabled = true
+threshold = 300
+weight = 20.0
+
+[rules.mmr_playlike_gap]
+enabled = false
+threshold = 800.0
+weight = 0.0
+
+[rules.high_mmr]
+enabled = false
+threshold = 4500.0
+weight = 0.0
+
+[rules.low_playlike]
+enabled = false
+threshold = 2500.0
+weight = 0.0
+
+[rules.missing_community_data]
+enabled = false
+weight = 10.0
+
+[rules.history_high_win_rate]
+enabled = true
+threshold = 5
+weight = 15.0
+
+[rules.history_win_streak]
+enabled = true
+threshold = 4
+weight = 10.0
+
+[rules.handle_blocklist]
+enabled = true
+weight = 30.0
+
+[actions]
+dry_run = true
+auto_kick_enabled = false
+kick_cooldown_sec = 5.0
+kick_menu_down_presses = 1
+kick_fast_path = true
+kick_ocr_fallback = false
+kick_menu_open_wait_sec = 0.12
+kick_focus_wait_sec = 0.12
+kick_save_debug_shots = false
+kick_menu_template_path = "target/kick_menu.png"
+kick_menu_labels = ["移出房间", "移除玩家", "Kick Player", "踢出玩家"]
+profile_menu_labels = ["查看档案", "View Profile", "查看个人档案", "Profile"]
+
+[community]
+provider = "ks2wiki"
+stub_path = "config/community_stub.json"
+base_url = "https://wiki.ks2.top"
+submit_path = "/api/v1/handles"
+rating_path = "/api/v1/handles/{handle}"
+api_key = ""
+timeout_sec = 10.0
+
+[ui]
+window_title_contains = "星际争霸"
+notify_high_suspicion = true
+
+[vision]
+enabled = false
+engine = "paddleocr"
+use_gpu = false
+scan_interval_sec = 3.0
+min_confidence = 0.5
+save_debug_images = false
+
+[memory]
+enabled = true
+process_names = ["SC2_x64.exe", "SC2.exe"]
+chunk_size = 65536
+handle_scan_budget_sec = 12.0
+name_search_radius = 768
+scan_interval_sec = 2.0
+scan_interval_in_room_sec = 0.35
+record_enabled = true
+targeted_scan_enabled = true
+targeted_region_limit = 24
+targeted_min_regions = 2
+targeted_min_handles = 2
+full_scan_fallback = false
+host_handle_module_offset = "0x3E2F340"
+host_anchor_scan_radius = 8192
+host_anchor_enabled = true
+scan_mode = "roster"
+calibration_path = "data/probe_calibration.json"
+roster_rescan_budget_sec = 5.0
+roster_rescan_every_scans = 6
+roster_rescan_every_scans_in_room = 24
+target_pid = 0
+list_only = true
+auto_enter_lobby = true
+
+[calibration.map_region]
+x = 0.35
+y = 0.02
+w = 0.30
+h = 0.05
+
+[replays]
+enabled = true
+max_count = 100
+refresh_sec = 60
+paths = []
+ks2_only = true
+map_prefixes = ["凯瑞甘生存2", "Kerrigan Survival", "凯瑞甘生存"]
+filename_priorities = ["凯瑞甘生存2", "凯瑞甘生存", "Kerrigan Survival"]
+
+[replay_upload]
+enabled = true
+upload_url = "https://replay.kerrigansurvival.com/upload"
+user_agent = "kerrigan-survival-uploader/1.07"
+max_file_bytes = 3145728
+min_age_sec = 5.0
+grace_period_sec = 120.0
+grace_check_interval_sec = 5.0
+timeout_sec = 60.0
+ks2_only = true
+window_hours = 48
+check_interval_sec = 300
+use_filename_filter = true
+filename_markers = ["凯瑞甘生存2", "凯瑞甘生存", "Kerrigan Survival"]
+
+[roster]
+enabled = false
+sync_interval_sec = 300
+
+[roster.sync]
+provider = "disabled"
+path = "config/player_roster.xlsx"
+url = ""
+push_enabled = true
+push_from_replays = true
+former_name_prefix = "曾用名"
+fetch_url = ""
+push_url = ""
+api_key = ""
+
+[data_sources]
+rules_pack_path = ""
+confirmed = false

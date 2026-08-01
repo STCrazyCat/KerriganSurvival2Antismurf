@@ -1,0 +1,250 @@
+# KS2 role taxonomy for scoring aggregation.
+# side: kerrigan | survivor
+# archetype: hunter | defender | builder | support
+
+[[roles]]
+name = "Thakras"
+side = "kerrigan"
+archetype = "hunter"
+
+[[roles]]
+name = "Kerrigan"
+side = "kerrigan"
+archetype = "hunter"
+
+[[roles]]
+name = "Dehaka"
+side = "kerrigan"
+archetype = "hunter"
+
+[[roles]]
+name = "Brakk"
+side = "kerrigan"
+archetype = "hunter"
+
+[[roles]]
+name = "Kraith"
+side = "kerrigan"
+archetype = "hunter"
+
+[[roles]]
+name = "Malus"
+side = "kerrigan"
+archetype = "hunter"
+
+[[roles]]
+name = "Izsha"
+side = "kerrigan"
+archetype = "defender"
+
+[[roles]]
+name = "Zagara"
+side = "kerrigan"
+archetype = "defender"
+
+[[roles]]
+name = "Niadra"
+side = "kerrigan"
+archetype = "defender"
+
+[[roles]]
+name = "Sir_Roachington"
+side = "kerrigan"
+archetype = "defender"
+aliases = ["Sir Roachington"]
+
+[[roles]]
+name = "Phaegore"
+side = "kerrigan"
+archetype = "defender"
+
+[[roles]]
+name = "Technician"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Energizer"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "DJ"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Scientist"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Andor"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "SgtHammer"
+side = "survivor"
+archetype = "builder"
+aliases = ["Sgt_Hammer"]
+
+[[roles]]
+name = "Sophia"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Stukov"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Ascendant"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Aewyn"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Helios"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Warfield"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Skitter"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Champion"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Mira"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Artanis"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Selendis"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Nomad"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Engineer"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Alarak"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Critter_Lord"
+side = "survivor"
+archetype = "builder"
+aliases = ["Critter Lord"]
+
+[[roles]]
+name = "Spirit"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Ares"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Jinara"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Swann"
+side = "survivor"
+archetype = "builder"
+
+[[roles]]
+name = "Nightingale"
+side = "survivor"
+archetype = "support"
+
+[[roles]]
+name = "Warden"
+side = "survivor"
+archetype = "support"
+
+[[roles]]
+name = "Dark_Templar"
+side = "survivor"
+archetype = "support"
+aliases = ["Dark Templar"]
+
+[[roles]]
+name = "Elementalist"
+side = "survivor"
+archetype = "support"
+
+[[roles]]
+name = "Sjlerk"
+side = "survivor"
+archetype = "support"
+
+[[roles]]
+name = "Rattlesnake"
+side = "survivor"
+archetype = "support"
+
+[[roles]]
+name = "Prophet"
+side = "survivor"
+archetype = "support"
+
+[[roles]]
+name = "Team_Nova"
+side = "survivor"
+archetype = "support"
+aliases = ["Team Nova"]
+
+[[roles]]
+name = "Chew"
+side = "survivor"
+archetype = "support"
+
+[[roles]]
+name = "Scion"
+side = "survivor"
+archetype = "support"
+
+[[roles]]
+name = "Delta_Squad"
+side = "survivor"
+archetype = "support"
+aliases = ["Delta Squad"]
+
+# Additional Kerrigan roles seen in API data
+[[roles]]
+name = "Glevig"
+side = "kerrigan"
+archetype = "hunter"

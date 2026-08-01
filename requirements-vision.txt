@@ -1,0 +1,5 @@
+# PaddleOCR vision stack (install AFTER requirements.txt)
+# PaddlePaddle does not support Python 3.14+ and is not on default PyPI for all platforms.
+# Run:  .\scripts\install_vision_deps.ps1
+# Or see README「安装 PaddleOCR」
+paddleocr>=2.7,<4

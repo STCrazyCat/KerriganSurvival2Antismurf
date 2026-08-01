@@ -1,0 +1,128 @@
+# Aggressive preset — higher recall, more false positives
+
+[[expression_rules]]
+id = "handle_discriminator_high"
+enabled = true
+label = "玩家 ID 过高（疑似新号）"
+left = "handle.profile_id"
+op = ">="
+right = 12000
+weight = 30
+else_weight = 0
+
+[[expression_rules]]
+id = "playlike_spike_count"
+enabled = true
+label = "多局 playlike 异常高于核心 MMR"
+left = "spike.count"
+op = ">="
+right = 2
+weight = 40
+else_weight = 0
+min_games = 3
+
+[[expression_rules]]
+id = "playlike_spike_magnitude"
+enabled = true
+label = "单局 playlike 超出核心幅度过大"
+left = "spike.max"
+op = ">="
+right = 400
+weight = 30
+else_weight = 0
+min_games = 2
+
+[[expression_rules]]
+id = "playlike_lift_kerrigan"
+enabled = true
+label = "凯瑞甘 playlike 高于核心"
+left = "lift.core_kerrigan"
+op = ">="
+right = 400
+weight = 20
+else_weight = 0
+min_games = 2
+
+[[expression_rules]]
+id = "playlike_lift_survivor"
+enabled = true
+label = "生存者 playlike 高于核心"
+left = "lift.core_survivor"
+op = ">="
+right = 400
+weight = 20
+else_weight = 0
+min_games = 2
+
+[[expression_rules]]
+id = "mmr_playlike_gap"
+enabled = false
+label = "（已弃用）核心 MMR 与 playlike 差过大"
+left = "gap.core_max"
+op = ">="
+right = 600
+weight = 0
+else_weight = 0
+
+[[expression_rules]]
+id = "kerrigan_core_gap"
+enabled = false
+label = "（已弃用）凯瑞甘核心差过大"
+left = "gap.core_kerrigan"
+op = ">="
+right = 500
+weight = 0
+else_weight = 0
+min_games = 2
+
+[[expression_rules]]
+id = "survivor_core_gap"
+enabled = false
+label = "（已弃用）生存者核心差过大"
+left = "gap.core_survivor"
+op = ">="
+right = 500
+weight = 0
+else_weight = 0
+min_games = 2
+
+[[expression_rules]]
+id = "high_mmr"
+enabled = false
+label = "（已弃用）核心 MMR 偏高"
+left = "core_mmr.max"
+op = ">="
+right = 4000
+weight = 0
+else_weight = 0
+
+[[expression_rules]]
+id = "low_playlike"
+enabled = false
+label = "（已弃用）playlike 均值偏低"
+left = "playlike.avg_all"
+op = "<="
+right = 2800
+weight = 0
+else_weight = 0
+min_games = 2
+
+[[expression_rules]]
+id = "missing_community_data"
+enabled = false
+label = "无社区 MMR 数据"
+left = "data.has_mmr"
+op = "=="
+right = false
+weight = 15
+else_weight = 0
+
+[[expression_rules]]
+id = "handle_blocklist"
+enabled = true
+label = "黑名单玩家"
+left = "blocklist.hit"
+op = "=="
+right = true
+weight = 35
+else_weight = 0

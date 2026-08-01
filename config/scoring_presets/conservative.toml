@@ -1,0 +1,95 @@
+# Conservative preset — fewer false positives
+
+[[expression_rules]]
+id = "handle_discriminator_high"
+enabled = true
+label = "玩家 ID 过高（疑似新号）"
+left = "handle.profile_id"
+op = ">="
+right = 18000
+weight = 20
+else_weight = 0
+
+[[expression_rules]]
+id = "handle_discriminator_low"
+enabled = true
+label = "玩家 ID 较低（老账号倾向）"
+left = "handle.profile_id"
+op = "<"
+right = 1000
+weight = -15
+else_weight = 0
+
+[[expression_rules]]
+id = "playlike_spike_count"
+enabled = true
+label = "多局 playlike 异常高于核心 MMR"
+left = "spike.count"
+op = ">="
+right = 4
+weight = 35
+else_weight = 0
+min_games = 8
+
+[[expression_rules]]
+id = "playlike_spike_magnitude"
+enabled = true
+label = "单局 playlike 超出核心幅度过大"
+left = "spike.max"
+op = ">="
+right = 600
+weight = 25
+else_weight = 0
+min_games = 5
+
+[[expression_rules]]
+id = "mmr_playlike_gap"
+enabled = false
+label = "（已弃用）核心 MMR 与 playlike 差过大"
+left = "gap.core_max"
+op = ">="
+right = 1000
+weight = 0
+else_weight = 0
+min_games = 5
+
+[[expression_rules]]
+id = "high_mmr"
+enabled = false
+label = "（已弃用）核心 MMR 偏高"
+left = "core_mmr.max"
+op = ">="
+right = 4800
+weight = 0
+else_weight = 0
+
+[[expression_rules]]
+id = "low_playlike"
+enabled = false
+label = "（已弃用）playlike 均值偏低"
+left = "playlike.avg_all"
+op = "<="
+right = 2200
+weight = 0
+else_weight = 0
+min_games = 5
+
+[[expression_rules]]
+id = "missing_community_data"
+enabled = false
+label = "无社区 MMR 数据"
+left = "data.has_mmr"
+op = "=="
+right = false
+weight = 5
+else_weight = 0
+
+[[expression_rules]]
+id = "handle_blocklist"
+enabled = true
+label = "黑名单玩家"
+left = "blocklist.hit"
+op = "=="
+right = true
+weight = 30
+else_weight = 0

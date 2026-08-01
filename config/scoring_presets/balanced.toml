@@ -1,0 +1,51 @@
+# Default scoring — built-in rules only; add custom rules in the editor.
+
+[[expression_rules]]
+id = "playlike_top3_lift_1000"
+enabled = true
+label = "Top3 playlike 均值 − 核心 MMR > 1000"
+left = "lift.top3_core_max"
+op = ">"
+right = 1000
+weight = 100
+else_weight = 0
+
+[[expression_rules]]
+id = "low_community_matches"
+enabled = true
+label = "社区场次 < 20"
+left = "data.community_match_count"
+op = "<"
+right = 20
+weight = 20
+else_weight = 0
+
+[[expression_rules]]
+id = "playlike_top3_lift_800"
+enabled = true
+label = "Top3 playlike 均值 − 核心 MMR > 800"
+left = "lift.top3_core_max"
+op = ">"
+right = 800
+weight = 20
+else_weight = 0
+
+[[expression_rules]]
+id = "playlike_top3_lift_600"
+enabled = true
+label = "Top3 playlike 均值 − 核心 MMR > 600"
+left = "lift.top3_core_max"
+op = ">"
+right = 600
+weight = 20
+else_weight = 0
+
+[[expression_rules]]
+id = "playlike_recent_growth_200"
+enabled = true
+label = "近期 playlike 推断 MMR 增长 > 200"
+left = "growth.playlike_recent"
+op = ">"
+right = 200
+weight = 20
+else_weight = 0
