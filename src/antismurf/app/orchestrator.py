@@ -155,25 +155,34 @@ class Orchestrator:
         )
 
         if due_scan:
-            self._last_lobby_snapshot = await asyncio.to_thread(
-                self._memory_reader.read_lobby_snapshot
-            )
-            self._last_memory_scan_at = now
-            state = self._memory_reader.roster_state
-            self._last_roster_status = {
-                "phase": state.phase,
-                "in_room": state.in_room,
-                "room_created": state.room_created,
-                "record_base": state.record_base,
-                "record_base_source": state.record_base_source,
-                "member_count": state.member_count,
-            }
-            snap = self._last_lobby_snapshot
-            self._last_scan_error = snap.error if snap else None
-            if snap and snap.local_handle:
-                self._local_handle = snap.local_handle
-                self._replay_uploader.set_local_handle(snap.local_handle)
+            await self._scan_lobby_snapshot()
 
+        await self._process_lobby_snapshot()
+
+    async def _scan_lobby_snapshot(self) -> None:
+        """立即扫描一次 SC2 大厅内存快照并更新缓存状态。"""
+        if self._memory_reader is None:
+            return
+        self._last_lobby_snapshot = await asyncio.to_thread(
+            self._memory_reader.read_lobby_snapshot
+        )
+        self._last_memory_scan_at = time.monotonic()
+        state = self._memory_reader.roster_state
+        self._last_roster_status = {
+            "phase": state.phase,
+            "in_room": state.in_room,
+            "room_created": state.room_created,
+            "record_base": state.record_base,
+            "record_base_source": state.record_base_source,
+            "member_count": state.member_count,
+        }
+        snap = self._last_lobby_snapshot
+        self._last_scan_error = snap.error if snap else None
+        if snap and snap.local_handle:
+            self._local_handle = snap.local_handle
+            self._replay_uploader.set_local_handle(snap.local_handle)
+
+    async def _process_lobby_snapshot(self) -> None:
         snapshot = self._last_lobby_snapshot
         if snapshot is None:
             if self._replay_uploader.should_run_check():
@@ -263,6 +272,14 @@ class Orchestrator:
         if self._replay_uploader.should_run_check():
             await self._check_replay_upload()
         self._notify()
+
+    async def refresh_lobby_now(self) -> bool:
+        """手动刷新:立即扫描一次房间并重新评估玩家,返回是否成功执行。"""
+        if not self._config.memory_enabled or self._memory_reader is None:
+            return False
+        await self._scan_lobby_snapshot()
+        await self._process_lobby_snapshot()
+        return True
 
     async def _check_replay_upload(self) -> None:
         results = await asyncio.to_thread(self._replay_uploader.check_and_upload)

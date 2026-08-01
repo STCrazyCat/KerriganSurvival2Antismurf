@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 BUILD_FLAVOR: str = "memory"
-BUILD_VERSION: str = "1.1.0"
+BUILD_VERSION: str = "1.1.1"
 AUTO_KICK_ENABLED: bool = True
 MEMORY_SCAN_AVAILABLE: bool = True
 APP_EXE_BASENAME: str = "AntiSmurf-Memory"

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-08-01
+
+### Added
+
+- 主界面「刷新」按钮：手动立即扫描房间玩家信息并重新评估确认
+
+### Fixed
+
+- `.gitignore` 误伤 `src/antismurf/data` 源码包导致 CI 失败（改为锚定根目录）
+- `build.spec` 移除已清理的 `target/` 目录引用
+
 ## [1.1.0] - 2026-07-06
 
 ### Added
@@ -87,6 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows portable exe and Inno Setup installer build scripts
 - Local replay indexing, auto-upload hook, GUI calibration
 
-[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.1.1
 [1.1.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.1.0
 [1.0.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.0.0

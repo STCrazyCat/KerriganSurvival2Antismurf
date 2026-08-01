@@ -192,3 +192,58 @@ def test_roster_list_only_syncs_players_without_scoring() -> None:
             await orch.stop()
 
     asyncio.run(run())
+
+
+def test_refresh_lobby_now_scans_and_notifies() -> None:
+    from types import SimpleNamespace
+
+    class FakeReader:
+        def __init__(self) -> None:
+            self.roster_state = SimpleNamespace(
+                phase="in_room",
+                in_room=True,
+                room_created=True,
+                record_base=0x1234,
+                record_base_source="scan",
+                member_count=1,
+            )
+
+        def read_lobby_snapshot(self):
+            return SimpleNamespace(
+                error=None,
+                handles=[],
+                local_handle="5-S2-1-1",
+                map_name="凯瑞甘生存2",
+                is_local_host=True,
+            )
+
+        def set_lobby_active(self, active: bool) -> None:
+            pass
+
+    async def run() -> None:
+        orch = Orchestrator(AppConfig())
+        orch._config.memory_enabled = True
+        orch._memory_reader = FakeReader()
+        notified: list[tuple] = []
+        orch._on_update = lambda *args: notified.append(args)
+
+        ok = await orch.refresh_lobby_now()
+
+        assert ok
+        assert orch.last_roster_status.get("in_room") is True
+        assert orch._local_handle == "5-S2-1-1"
+        assert orch._lobby_active
+        assert notified, "手动刷新后应触发通知更新界面"
+
+    asyncio.run(run())
+
+
+def test_refresh_lobby_now_disabled_without_reader() -> None:
+    async def run() -> None:
+        orch = Orchestrator(AppConfig())
+        orch._config.memory_enabled = False
+        orch._memory_reader = None
+        ok = await orch.refresh_lobby_now()
+        assert not ok
+
+    asyncio.run(run())

@@ -146,6 +146,10 @@ class AntiSmurfApp(ctk.CTk):
             btn_bar, text="设置", width=60, command=self._open_settings
         ).pack(side="right", padx=6)
 
+        ctk.CTkButton(
+            btn_bar, text="刷新", width=60, command=self._manual_refresh
+        ).pack(side="right", padx=6)
+
         self._dry_run_var = ctk.BooleanVar(value=self._config.dry_run)
         ctk.CTkCheckBox(
             btn_bar,
@@ -797,6 +801,32 @@ class AntiSmurfApp(ctk.CTk):
                 self._orchestrator.whitelist_player(handle), self._loop
             )
             self._log(f"已加入白名单: {handle}")
+
+    def _manual_refresh(self) -> None:
+        """手动刷新:立即扫描一次房间玩家信息并确认更新。"""
+        if not self._orchestrator or not self._loop:
+            self._log("后台未就绪，无法刷新")
+            return
+        future = asyncio.run_coroutine_threadsafe(
+            self._orchestrator.refresh_lobby_now(), self._loop
+        )
+
+        def done(f) -> None:
+            try:
+                ok = bool(f.result())
+            except Exception as exc:
+                ok = False
+                logger.warning("Manual refresh failed: %s", exc)
+            self.after(
+                0,
+                lambda: self._log(
+                    "已手动刷新并确认房间玩家信息"
+                    if ok
+                    else "手动刷新失败：内存扫描未启用或未找到 SC2 进程"
+                ),
+            )
+
+        future.add_done_callback(done)
 
     def _on_toggle_dry_run(self) -> None:
         self._config.dry_run = self._dry_run_var.get()
