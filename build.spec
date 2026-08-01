@@ -10,7 +10,6 @@ a = Analysis(
     binaries=[],
     datas=[
         (str(root / "config"), "config"),
-        (str(root / "target"), "target"),
     ],
     hiddenimports=[
         "customtkinter",
