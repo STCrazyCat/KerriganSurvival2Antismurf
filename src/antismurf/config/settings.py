@@ -72,6 +72,11 @@ class HandleTrustRule:
 
 @dataclass
 class AppConfig:
+    # 分数显示颜色(主界面/历史界面,可在设置中修改)
+    score_color_positive: str = "#ff5c5c"  # +分(嫌疑)红色
+    score_color_negative: str = "#57d957"  # -分(信任)绿色
+    score_color_zero: str = "#ffffff"      # 0 分(中性)白色
+
     target_maps: list[str] = field(
         default_factory=lambda: ["凯瑞甘生存2", "Kerrigan Survival 2"]
     )

@@ -19,6 +19,7 @@ from antismurf.lobby.sc2_process import Sc2WindowInfo, list_sc2_windows
 from antismurf.models.evaluation import PlayerRecord
 from antismurf.config.kick_defaults import ui_slot_label
 from antismurf.app.mmr_display import faction_stats_for_record
+from antismurf.app.score_theme import score_color
 from antismurf.review.profile_assist import ProfileAssist
 
 if TYPE_CHECKING:
@@ -476,10 +477,10 @@ class AntiSmurfApp(ctk.CTk):
         row._kick_btn = kick_btn  # type: ignore[attr-defined]
         ctk.CTkButton(
             btn_frame,
-            text="标记+100",
+            text="拉黑+200",
             width=72,
             fg_color="#8a6d00",
-            command=lambda h=record.handle: self._mark_handle(h),
+            command=lambda h=record.handle: self._blacklist_mark(h),
         ).pack(side="left", padx=2)
         ctk.CTkButton(
             btn_frame,
@@ -504,6 +505,7 @@ class AntiSmurfApp(ctk.CTk):
         row._labels = labels  # type: ignore[attr-defined]
         tier_lbl = labels["tier"]
         tier_lbl.configure(text_color=TIER_COLORS.get(record.tier, "white"))
+        labels["score"].configure(text_color=score_color(record.score, self._config))
         return row
 
     def _create_list_only_row(self, record: PlayerRecord) -> ctk.CTkFrame:
@@ -547,12 +549,13 @@ class AntiSmurfApp(ctk.CTk):
         row._kick_btn = kick_btn  # type: ignore[attr-defined]
         ctk.CTkButton(
             row,
-            text="标记",
+            text="拉黑",
             width=48,
             fg_color="#8a6d00",
-            command=lambda h=record.handle: self._mark_handle(h),
+            command=lambda h=record.handle: self._blacklist_mark(h),
         ).pack(side="left", padx=2)
         row._labels = labels  # type: ignore[attr-defined]
+        labels["score"].configure(text_color=score_color(record.score, self._config))
         return row
 
     def _update_row(self, record: PlayerRecord) -> None:
@@ -570,7 +573,8 @@ class AntiSmurfApp(ctk.CTk):
             labels["k_mmr"].configure(text=stats["k_mmr"])
             labels["k_pl"].configure(text=stats["k_pl"])
             labels["score"].configure(
-                text=f"{record.score:.0f}" if record.score else "-"
+                text=f"{record.score:.0f}" if record.score else "-",
+                text_color=score_color(record.score, self._config),
             )
             labels["slot"].configure(text=ui_slot_label(record.slot_index))
             return
@@ -586,7 +590,10 @@ class AntiSmurfApp(ctk.CTk):
             text=TIER_LABELS.get(record.tier, record.tier),
             text_color=TIER_COLORS.get(record.tier, "white"),
         )
-        labels["score"].configure(text=f"{record.score:.0f}")
+        labels["score"].configure(
+            text=f"{record.score:.0f}",
+            text_color=score_color(record.score, self._config),
+        )
         labels["rules"].configure(
             text=", ".join(record.triggered_rules[:3]) or "-"
         )
@@ -726,13 +733,13 @@ class AntiSmurfApp(ctk.CTk):
             )
             self._log(f"已加入黑名单并重新评估: {handle}")
 
-    def _mark_handle(self, handle: str) -> None:
+    def _blacklist_mark(self, handle: str) -> None:
         if not self._orchestrator or not self._loop:
             return
         asyncio.run_coroutine_threadsafe(
-            self._orchestrator.mark_player_handle(handle), self._loop
+            self._orchestrator.blacklist_and_mark(handle), self._loop
         )
-        self._log(f"已添加快捷标记规则 (+100): {handle}")
+        self._log(f"已一键拉黑 (+200 嫌疑分): {handle}")
 
     def _open_calibration(self) -> None:
         from antismurf.app.calibration import CalibrationWizard

@@ -82,6 +82,10 @@ class Orchestrator:
         return dict(self._last_roster_status)
 
     @property
+    def config(self) -> AppConfig:
+        return self._config
+
+    @property
     def last_scan_error(self) -> str | None:
         return self._last_scan_error
 
@@ -562,6 +566,17 @@ class Orchestrator:
         if handle in self._players:
             await self.re_evaluate_player(handle)
         self._notify()
+
+    async def blacklist_and_mark(self, handle: str, weight: float = 200.0) -> None:
+        """一键拉黑:加入黑名单列表并写入 handle_mark_rules(+200 嫌疑分)。"""
+        handle = handle.strip()
+        if not handle:
+            return
+        await self._store.add_blocklist(handle)
+        self._config.blocklist_handles.add(handle)
+        await self.mark_player_handle(
+            handle, weight=weight, label=f"一键拉黑 {handle}"
+        )
 
     def on_high_suspicion(self, handle: str, tier: str, score: float) -> None:
         if not self._config.notify_high_suspicion:

@@ -44,6 +44,13 @@ class SettingsDialog(ctk.CTkToplevel):
         add_row("踢人菜单下按次数", "kick_menu_down_presses", str(config.kick_menu_down_presses))
         add_row("档案菜单下按次数", "profile_menu_down_presses", str(config.profile_menu_down_presses))
 
+        ctk.CTkLabel(scroll, text="分数颜色（主界面/历史界面）", anchor="w").pack(
+            fill="x", pady=(12, 4)
+        )
+        add_row("正分（+）", "score_color_positive", config.score_color_positive)
+        add_row("负分（−）", "score_color_negative", config.score_color_negative)
+        add_row("零分（0）", "score_color_zero", config.score_color_zero)
+
         ctk.CTkLabel(scroll, text="社区服务器", anchor="w").pack(
             fill="x", pady=(12, 4)
         )
@@ -76,6 +83,9 @@ class SettingsDialog(ctk.CTkToplevel):
         cfg.profile_menu_down_presses = int(
             self._entries["profile_menu_down_presses"].get()
         )
+        cfg.score_color_positive = self._entries["score_color_positive"].get().strip() or "#ff5c5c"
+        cfg.score_color_negative = self._entries["score_color_negative"].get().strip() or "#57d957"
+        cfg.score_color_zero = self._entries["score_color_zero"].get().strip() or "#ffffff"
         cfg.community_provider = self._entries["community_provider"].get().strip()
         cfg.community_base_url = self._entries["community_base_url"].get().strip()
         cfg.community_api_key = self._entries["community_api_key"].get().strip()

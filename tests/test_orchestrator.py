@@ -247,3 +247,24 @@ def test_refresh_lobby_now_disabled_without_reader() -> None:
         assert not ok
 
     asyncio.run(run())
+
+
+def test_blacklist_and_mark_adds_rule_and_blocklist(monkeypatch) -> None:
+    from types import SimpleNamespace
+
+    import antismurf.config.settings as settings_mod
+
+    monkeypatch.setattr(settings_mod, "save_user_config", lambda cfg: None)
+
+    async def run() -> None:
+        orch = Orchestrator(AppConfig())
+        orch._store = SimpleNamespace(add_blocklist=lambda h: asyncio.sleep(0))
+        await orch.blacklist_and_mark("5-S2-1-999")
+        assert "5-S2-1-999" in orch.config.blocklist_handles
+        marks = [
+            m for m in orch.config.handle_mark_rules if m.handle == "5-S2-1-999"
+        ]
+        assert marks, "应写入 handle_mark_rules"
+        assert marks[0].weight == 200.0
+
+    asyncio.run(run())

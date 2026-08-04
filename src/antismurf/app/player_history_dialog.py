@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Callable
 
 import customtkinter as ctk
 
+from antismurf.app.score_theme import score_color
 from antismurf.data.sighting_compare import SightingComparison
 from antismurf.storage.sightings import PlayerSightingEntry
 
@@ -167,8 +168,15 @@ class PlayerHistoryDialog(ctk.CTkToplevel):
         )
         tier_lbl.pack(side="left", padx=2)
 
+        score_lbl = ctk.CTkLabel(
+            row,
+            text=f"{entry.score:.0f}",
+            width=36,
+            anchor="w",
+            text_color=score_color(entry.score, self._orchestrator.config),
+        )
+        score_lbl.pack(side="left", padx=2)
         for text, width in [
-            (f"{entry.score:.0f}", 36),
             (last_seen, 76),
             (str(entry.seen_count), 36),
         ]:
@@ -180,7 +188,7 @@ class PlayerHistoryDialog(ctk.CTkToplevel):
         btn_frame.pack(side="left", padx=2)
         mark_btn = ctk.CTkButton(
             btn_frame,
-            text="已标记" if marked else "高度疑似",
+            text="已拉黑" if marked else "拉黑+200",
             width=72,
             fg_color="#555" if marked else "#8a6d00",
             state="disabled" if marked else "normal",
@@ -255,14 +263,11 @@ class PlayerHistoryDialog(ctk.CTkToplevel):
         if self._loop is None:
             return
         asyncio.run_coroutine_threadsafe(
-            self._orchestrator.mark_player_handle(
-                handle,
-                label="高度疑似小号",
-            ),
+            self._orchestrator.blacklist_and_mark(handle),
             self._loop,
         )
         if self._on_log:
-            self._on_log(f"已将 {handle} 标记为高度疑似小号 (+100)")
+            self._on_log(f"已一键拉黑 {handle} (+200 嫌疑分)")
         self.after(400, self._reload)
 
     def _trust_handle(self, handle: str) -> None:

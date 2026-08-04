@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-08-01
+
+### Added
+
+- 分数按值着色（可配置，默认 +分红色 / −分绿色 / 0 分白色），应用于主界面与识别历史界面
+- 设置对话框新增分数颜色配置（正分/负分/零分）
+
+### Changed
+
+- 一键拉黑优化：主界面「拉黑+200」与历史界面按钮改为一键拉黑（加入黑名单并写入 handle_mark_rules，+200 嫌疑分），替代原「标记+100」
+
 ## [1.1.1] - 2026-08-01
 
 ### Added
@@ -98,7 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows portable exe and Inno Setup installer build scripts
 - Local replay indexing, auto-upload hook, GUI calibration
 
-[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.1.2
 [1.1.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.1.1
 [1.1.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.1.0
 [1.0.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.0.0
