@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-04
+
+### Added
+
+- 同局凯瑞甘 MMR 异常检测：玩家与主机 30 秒内同一对局、且凯瑞甘阵营评估 MMR 异常升高（反推核心 − 凯瑞甘核心 ≥ 400）时，每次 +20 嫌疑分
+- 命中时同会话弹出一次通知，提示嫌疑对象、累计次数与嫌疑原因
+- 检测阈值/窗口/每次加分可在 `config/user.toml` 调整（same_match_* 配置项）
+
 ## [1.1.2] - 2026-08-01
 
 ### Added
@@ -109,7 +117,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows portable exe and Inno Setup installer build scripts
 - Local replay indexing, auto-upload hook, GUI calibration
 
-[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.2.0
 [1.1.2]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.1.2
 [1.1.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.1.1
 [1.1.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.1.0

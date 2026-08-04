@@ -121,3 +121,18 @@ def test_parse_handle():
     assert parse_handle("5-S2-1-1234567") == ("5-S2-1-1234567", 1234567)
     assert is_valid_handle("5-S2-1-1234567")
     assert not is_valid_handle("Player#21698")
+
+
+def test_same_match_kerrigan_spike_adds_score():
+    config = _default_config()
+    engine = Stage1Engine(config)
+    rating = CommunityRating(handle="5-S2-1-500", mmr=3200, mmr_playlike=3100)
+    base = engine.evaluate(
+        "5-S2-1-500", 1, rating, kerrigan_same_match_spike_count=0
+    )
+    result = engine.evaluate(
+        "5-S2-1-500", 1, rating, kerrigan_same_match_spike_count=3
+    )
+    assert "same_match_kerrigan_spike" in result.triggered_rules
+    assert any("3次" in reason and "凯瑞甘" in reason for reason in result.rule_reasons)
+    assert result.score == min(100.0, base.score + 60)

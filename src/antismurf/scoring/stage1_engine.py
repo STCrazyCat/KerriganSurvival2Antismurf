@@ -32,6 +32,7 @@ class Stage1Engine:
         handle_constructed: bool = False,
         handle_from_binding: bool = False,
         ocr_digit_obfuscation: bool = False,
+        kerrigan_same_match_spike_count: int = 0,
     ) -> Stage1Result:
         _, discriminator = parse_handle(handle)
         profile = community.profile
@@ -70,6 +71,18 @@ class Stage1Engine:
         hits = evaluate_all_expression_rules(self._config.expression_rules, ctx)
         hits.extend(self._evaluate_handle_mark_rules(handle))
         hits.extend(self._evaluate_handle_trust_rules(handle))
+        if kerrigan_same_match_spike_count > 0:
+            per = self._config.same_match_kerrigan_spike_score
+            hits.append(
+                RuleHit(
+                    rule_id="same_match_kerrigan_spike",
+                    score_delta=per * kerrigan_same_match_spike_count,
+                    reason=(
+                        f"与主机同局时凯瑞甘MMR异常升高 "
+                        f"({kerrigan_same_match_spike_count}次, +{per:.0f}/次)"
+                    ),
+                )
+            )
 
         raw_score = sum(h.score_delta for h in hits)
         score = max(0.0, min(100.0, raw_score))

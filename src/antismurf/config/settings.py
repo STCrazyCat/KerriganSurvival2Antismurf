@@ -77,6 +77,11 @@ class AppConfig:
     score_color_negative: str = "#57d957"  # -分(信任)绿色
     score_color_zero: str = "#ffffff"      # 0 分(中性)白色
 
+    # 同局凯瑞甘 MMR 异常检测(与主机同局时评估 MMR 异常升高)
+    same_match_window_sec: float = 30.0          # 同局判定时间窗口(秒)
+    same_match_kerrigan_spike_threshold: float = 400.0  # 异常升高阈值(反推核心−凯瑞甘核心)
+    same_match_kerrigan_spike_score: float = 20.0  # 每次异常加分
+
     target_maps: list[str] = field(
         default_factory=lambda: ["凯瑞甘生存2", "Kerrigan Survival 2"]
     )

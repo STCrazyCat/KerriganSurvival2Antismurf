@@ -9,13 +9,19 @@ from typing import Callable
 from antismurf.actions.kicker import Kicker
 from antismurf.community.factory import create_community_provider
 from antismurf.config.settings import AppConfig
+from antismurf.data.profile_builder import build_profile_from_community_raw
 from antismurf.features import memory_scan_available
 from antismurf.lobby.slot_tracker import SlotTracker
 from antismurf.models.evaluation import MatchSummary, PlayerRecord
+from antismurf.models.community import CommunityRating
 from antismurf.models.player import PlayerHandle
 from antismurf.replay.auto_upload import ReplayAutoUploader
 from antismurf.replay.paths import resolve_replay_upload_paths
 from antismurf.scoring.stage1_engine import Stage1Engine
+from antismurf.scoring.same_match_detector import (
+    SameMatchSpike,
+    detect_kerrigan_same_match_spikes,
+)
 from antismurf.storage.store import PlayerStore
 
 logger = logging.getLogger(__name__)
@@ -51,10 +57,13 @@ class Orchestrator:
         self._last_memory_scan_at: float = 0.0
         self._is_local_host: bool = False
         self._local_handle: str | None = None
+        self._host_rating: CommunityRating | None = None
+        self._host_rating_handle: str | None = None
         self._lobby_active: bool = False
         self._lobby_map_name: str | None = None
         self._last_lobby_snapshot = None
         self._last_roster_status: dict[str, object] = {}
+        self._same_match_notified: set[str] = set()
         self._last_scan_error: str | None = None
 
     @property
@@ -183,8 +192,28 @@ class Orchestrator:
         snap = self._last_lobby_snapshot
         self._last_scan_error = snap.error if snap else None
         if snap and snap.local_handle:
-            self._local_handle = snap.local_handle
+            if snap.local_handle != self._local_handle:
+                self._local_handle = snap.local_handle
+                await self._refresh_host_rating()
             self._replay_uploader.set_local_handle(snap.local_handle)
+
+    async def _refresh_host_rating(self) -> None:
+        """获取主机(房主)自身战绩,用于与玩家做同局匹配。"""
+        handle = self._local_handle
+        if not handle:
+            self._host_rating = None
+            self._host_rating_handle = None
+            return
+        if handle == self._host_rating_handle and self._host_rating is not None:
+            return
+        try:
+            await self._community.submit_handle(handle)
+            rating = await self._community.get_rating_by_handle(handle)
+        except Exception as exc:
+            logger.warning("Failed to fetch host rating for %s: %s", handle, exc)
+            rating = None
+        self._host_rating_handle = handle
+        self._host_rating = rating
 
     async def _process_lobby_snapshot(self) -> None:
         snapshot = self._last_lobby_snapshot
@@ -308,6 +337,9 @@ class Orchestrator:
         self._is_local_host = False
         self._lobby_active = False
         self._lobby_map_name = None
+        self._host_rating = None
+        self._host_rating_handle = None
+        self._same_match_notified.clear()
 
     def _sync_lobby_placeholders(self, slots: list[PlayerHandle]) -> None:
         for player in slots:
@@ -384,6 +416,7 @@ class Orchestrator:
         player = self._enrich_display_name(player)
         await self._community.submit_handle(player.handle)
         community = await self._community.get_rating_by_handle(player.handle)
+        spike_hits = self._detect_same_match_spikes(player.handle, community)
         existing = self._players.get(player.handle)
         history = match_history or (existing.match_history if existing else None)
         result = self._engine.evaluate(
@@ -399,6 +432,7 @@ class Orchestrator:
             handle_constructed=player.handle_constructed,
             handle_from_binding=player.handle_from_binding,
             ocr_digit_obfuscation=player.ocr_digit_obfuscation,
+            kerrigan_same_match_spike_count=len(spike_hits),
         )
         await self._store.log_evaluation(
             result.handle, result.tier, result.score, result.triggered_rules
@@ -424,6 +458,18 @@ class Orchestrator:
         )
         self._players[result.handle] = record
         await self._store.upsert_player_sighting(record)
+        if spike_hits and result.handle not in self._same_match_notified:
+            self._same_match_notified.add(result.handle)
+            per = self._config.same_match_kerrigan_spike_score
+            from antismurf.utils.notify import notify
+
+            notify(
+                "AntiSmurf 同局凯瑞甘MMR异常",
+                f"{result.handle}\n"
+                f"次数: {len(spike_hits)} 次\n"
+                f"原因: 与主机同局时凯瑞甘阵营 MMR 异常升高"
+                f" (+{per:.0f}/次)",
+            )
         if self._engine.should_auto_kick(result) and self._is_local_host:
             if not (self._local_handle and result.handle == self._local_handle):
                 ok = self._kicker.kick_slot(result.slot_index)
@@ -432,6 +478,27 @@ class Orchestrator:
                 )
         if result.tier in ("high", "critical"):
             self.on_high_suspicion(result.handle, result.tier, result.score)
+
+    def _detect_same_match_spikes(
+        self,
+        handle: str,
+        community: CommunityRating,
+    ) -> list[SameMatchSpike]:
+        """检测玩家与主机同局时的凯瑞甘 MMR 异常升高(无主机数据时返回空)。"""
+        host = self._host_rating
+        if host is None or host.profile is None:
+            return []
+        profile = community.profile
+        if profile is None:
+            profile = build_profile_from_community_raw(handle, community.raw)
+        if profile is None or not profile.playlike_games:
+            return []
+        return detect_kerrigan_same_match_spikes(
+            profile,
+            host.profile,
+            threshold=self._config.same_match_kerrigan_spike_threshold,
+            window_sec=self._config.same_match_window_sec,
+        )
 
     def _notify(self) -> None:
         if self._on_update:
@@ -454,6 +521,8 @@ class Orchestrator:
         self._last_memory_scan_at = 0.0
         self._last_roster_status = {}
         self._last_scan_error = None
+        self._host_rating = None
+        self._host_rating_handle = None
         logger.info("SC2 target pid set to %s", pid or "auto")
 
     def _create_memory_reader(self):
