@@ -464,10 +464,10 @@ class Orchestrator:
             from antismurf.utils.notify import notify
 
             notify(
-                "AntiSmurf 同局凯瑞甘MMR异常",
-                f"{result.handle}\n"
+                "AntiSmurf 窥屏者识别：同局凯瑞甘MMR异常",
+                f"嫌疑对象: {result.handle}\n"
                 f"次数: {len(spike_hits)} 次\n"
-                f"原因: 与主机同局时凯瑞甘阵营 MMR 异常升高"
+                f"原因: 与主机同一对局时凯瑞甘阵营 MMR 异常升高"
                 f" (+{per:.0f}/次)",
             )
         if self._engine.should_auto_kick(result) and self._is_local_host:
@@ -497,7 +497,6 @@ class Orchestrator:
             profile,
             host.profile,
             threshold=self._config.same_match_kerrigan_spike_threshold,
-            window_sec=self._config.same_match_window_sec,
         )
 
     def _notify(self) -> None:

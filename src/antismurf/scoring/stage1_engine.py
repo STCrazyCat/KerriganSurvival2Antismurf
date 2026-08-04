@@ -78,7 +78,7 @@ class Stage1Engine:
                     rule_id="same_match_kerrigan_spike",
                     score_delta=per * kerrigan_same_match_spike_count,
                     reason=(
-                        f"与主机同局时凯瑞甘MMR异常升高 "
+                        f"窥屏嫌疑:与主机同一对局时凯瑞甘MMR异常升高 "
                         f"({kerrigan_same_match_spike_count}次, +{per:.0f}/次)"
                     ),
                 )

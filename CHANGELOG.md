@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-08-04
+
+### Fixed
+
+- 同局判定改为分钟精度：对局时间精确到分钟即视为同一场（不再按秒窗口），更贴合实际对局时间
+- 凯瑞甘阵营判定按角色名单（Kerrigan / Zagara / Dehaka / Thakras / Niadra / Brakk / Glevig / Phaegore / Izsha / Malus / Kraith / Sir Roachington），不依赖 API 的 side 字段
+- 功能语义明确为「识别窥屏者」：通知与规则原因文案更新（窥屏嫌疑：与主机同一对局时凯瑞甘 MMR 异常升高）
+
 ## [1.2.0] - 2026-08-04
 
 ### Added
@@ -117,7 +125,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows portable exe and Inno Setup installer build scripts
 - Local replay indexing, auto-upload hook, GUI calibration
 
-[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.2.1
 [1.2.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.2.0
 [1.1.2]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.1.2
 [1.1.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.1.1
