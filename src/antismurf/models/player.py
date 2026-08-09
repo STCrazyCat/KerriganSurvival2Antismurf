@@ -50,6 +50,36 @@ def is_valid_handle(text: str) -> bool:
     return parse_handle_parts(text.strip()) is not None
 
 
+HANDLE_BATCH_SPLIT_RE = re.compile(r"[\s,，;；、]+")
+
+
+def parse_handle_batch(
+    text: str,
+    default_prefix: str = "5-S2-1-",
+) -> tuple[list[str], list[str]]:
+    """Parse a batch of handles from free text.
+
+    Splits on spaces, commas (ASCII/Chinese), semicolons, and pauses.
+    Bare numbers are auto-completed with the default prefix (e.g. 1234567
+    -> 5-S2-1-1234567). Returns (valid_handles, invalid_items).
+    """
+    valid: list[str] = []
+    invalid: list[str] = []
+    prefix = (default_prefix or "5-S2-1-").strip()
+    for raw in HANDLE_BATCH_SPLIT_RE.split(text):
+        item = raw.strip()
+        if not item:
+            continue
+        candidate = item
+        if "-" not in item:
+            candidate = f"{prefix}{item}"
+        if is_valid_handle(candidate):
+            valid.append(candidate)
+        else:
+            invalid.append(item)
+    return valid, invalid
+
+
 def extract_handle_from_text(text: str) -> str | None:
     """Find the first KS2 handle in arbitrary replay/UI text."""
     text = text.strip()

@@ -178,6 +178,13 @@ class AntiSmurfApp(ctk.CTk):
             command=self._on_toggle_whitelist_mode,
         ).pack(side="right", padx=10)
 
+        ctk.CTkButton(
+            btn_bar,
+            text="批量白名单",
+            width=90,
+            command=self._open_whitelist_batch,
+        ).pack(side="right", padx=6)
+
         # 状态文本行：固定高度，长文本自动换行，可通过纵向滑动条查看全部内容
         self._status_box = ctk.CTkTextbox(
             header,
@@ -852,6 +859,20 @@ class AntiSmurfApp(ctk.CTk):
         self._config.auto_kick_enabled = self._auto_kick_var.get()
         if self._orchestrator:
             self._orchestrator.update_config(self._config)
+
+    def _open_whitelist_batch(self) -> None:
+        """批量添加白名单(自动识别分隔符/补全前缀/校验)。"""
+        if not self._orchestrator or not self._loop:
+            self._log("后台未就绪，无法批量添加白名单")
+            return
+        from antismurf.app.whitelist_batch_dialog import WhitelistBatchDialog
+
+        WhitelistBatchDialog(
+            self,
+            self._orchestrator,
+            self._loop,
+            on_log=self._log,
+        )
 
     def _on_toggle_whitelist_mode(self) -> None:
         self._config.whitelist_mode = self._whitelist_mode_var.get()

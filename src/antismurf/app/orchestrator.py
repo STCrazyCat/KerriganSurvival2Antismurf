@@ -609,6 +609,17 @@ class Orchestrator:
             self._players[handle].tier = "low"
         self._notify()
 
+    async def whitelist_handles(self, handles: list[str]) -> int:
+        """批量添加白名单,返回实际新增数量(已存在的跳过)。"""
+        added = 0
+        for handle in handles:
+            handle = handle.strip()
+            if not handle or await self._store.is_whitelisted(handle):
+                continue
+            await self.whitelist_player(handle)
+            added += 1
+        return added
+
     async def blocklist_player(self, handle: str) -> None:
         await self._store.add_blocklist(handle)
         self._config.blocklist_handles.add(handle)

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-08-09
+
+### Added
+
+- **批量添加白名单**：主界面「批量白名单」对话框支持一次粘贴多个句柄
+  - 自动识别分隔符（空格 / 逗号 / 中文逗号 / 分号 / 顿号 / 换行）
+  - 纯数字自动补全句柄开头 `5-S2-1-`（不定长数字）
+  - 合法性校验：非法内容列出并跳过，不添加
+
 ## [1.3.0] - 2026-08-04
 
 ### Added
@@ -134,7 +143,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows portable exe and Inno Setup installer build scripts
 - Local replay indexing, auto-upload hook, GUI calibration
 
-[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.3.1
 [1.3.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.3.0
 [1.2.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.2.1
 [1.2.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.2.0
