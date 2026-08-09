@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import shutil
+import subprocess
 import uuid
 from tkinter import filedialog, messagebox
 from typing import Callable
@@ -82,6 +85,15 @@ class RuleEditorDialog(ctk.CTkToplevel):
         ctk.CTkButton(top, text="使用说明", width=80, command=self._open_help).pack(
             side="left", padx=4
         )
+        ctk.CTkButton(
+            top, text="AI 助手", width=80, command=self._open_ai_assistant
+        ).pack(side="left", padx=4)
+        ctk.CTkButton(top, text="IDE 编辑", width=80, command=self._open_ide_editor).pack(
+            side="left", padx=4
+        )
+        ctk.CTkButton(
+            top, text="从文件重载", width=90, command=self._reload_from_file
+        ).pack(side="left", padx=4)
 
         body = ctk.CTkFrame(self)
         body.pack(fill="both", expand=True, padx=10, pady=5)
@@ -249,6 +261,77 @@ class RuleEditorDialog(ctk.CTkToplevel):
         if self._rules:
             self._select_rule(0)
         self._update_preview()
+
+    def _open_ai_assistant(self) -> None:
+        """打开 AI 规则助手:填 API Key 用自然语言生成规则。"""
+        from antismurf.app.ai_rule_dialog import AiRuleDialog
+
+        def on_rules(rules: list[ExpressionRule]) -> None:
+            self._rules.extend(rules)
+            self._selected_idx = None
+            self._refresh_rule_list()
+            if self._rules:
+                self._select_rule(len(self._rules) - 1)
+            self._update_preview()
+
+        def on_config_saved(cfg: AppConfig) -> None:
+            self._config = cfg
+            if self._on_saved:
+                self._on_saved(cfg)
+
+        AiRuleDialog(
+            self,
+            self._config,
+            on_rules=on_rules,
+            on_config_saved=on_config_saved,
+        )
+
+    def _open_ide_editor(self) -> None:
+        """导出当前规则到临时规则文件并用本地 IDE(VSCode)打开。"""
+        self._apply_editor(silent=True)
+        path = _project_root() / "config" / "rule_edit.toml"
+        try:
+            save_rule_pack(path, self._rules, meta=RulePackMeta(name="rule_edit"))
+        except Exception as exc:  # noqa: BLE001
+            messagebox.showerror("导出失败", str(exc), parent=self)
+            return
+        code = shutil.which("code")
+        if code:
+            subprocess.Popen([code, str(path)])
+        else:
+            os.startfile(str(path))  # type: ignore[attr-defined]
+        messagebox.showinfo(
+            "已打开编辑器",
+            "请在编辑器中修改规则后,点击「从文件重载」应用",
+            parent=self,
+        )
+
+    def _reload_from_file(self) -> None:
+        """从 config/rule_edit.toml 加载编辑后的规则。"""
+        path = _project_root() / "config" / "rule_edit.toml"
+        if not path.exists():
+            messagebox.showerror(
+                "未找到规则文件", "请先使用「IDE 编辑」导出规则文件", parent=self
+            )
+            return
+        try:
+            _meta, imported = load_rule_pack(path)
+        except Exception as exc:  # noqa: BLE001
+            messagebox.showerror("加载失败", str(exc), parent=self)
+            return
+        validation = validate_rules(imported)
+        if validation.errors:
+            messagebox.showerror(
+                "规则校验失败", "\n".join(validation.errors[:8]), parent=self
+            )
+            return
+        self._rules = imported
+        self._selected_idx = None
+        self._refresh_rule_list()
+        if self._rules:
+            self._select_rule(0)
+        self._update_preview()
+        messagebox.showinfo("重载成功", f"已加载 {len(imported)} 条规则", parent=self)
 
     def _on_preset_selected(self, name: str) -> None:
         raw = load_preset_rules(name)

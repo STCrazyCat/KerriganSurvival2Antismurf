@@ -268,3 +268,20 @@ def test_blacklist_and_mark_adds_rule_and_blocklist(monkeypatch) -> None:
         assert marks[0].weight == 200.0
 
     asyncio.run(run())
+
+
+def test_is_trusted_handle_matches_trust_rules() -> None:
+    from antismurf.config.settings import HandleTrustRule
+
+    cfg = AppConfig()
+    cfg.handle_trust_rules = [
+        HandleTrustRule(handle="5-S2-1-777", weight=-20, label="friend")
+    ]
+    orch = Orchestrator(cfg)
+    assert orch._is_trusted_handle("5-S2-1-777")
+    assert not orch._is_trusted_handle("5-S2-1-888")
+
+
+def test_whitelist_mode_config_default_off() -> None:
+    cfg = AppConfig()
+    assert cfg.whitelist_mode is False

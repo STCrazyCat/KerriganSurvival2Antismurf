@@ -81,6 +81,14 @@ class AppConfig:
     same_match_kerrigan_spike_threshold: float = 400.0  # 异常升高阈值(反推核心−凯瑞甘核心)
     same_match_kerrigan_spike_score: float = 20.0  # 每次异常加分
 
+    # AI 助手(规则编写,OpenAI 兼容接口)
+    ai_api_base_url: str = "https://api.deepseek.com/v1"
+    ai_api_key: str = ""
+    ai_model: str = "deepseek-chat"
+
+    # 白名单模式:自动踢出白名单以外的所有玩家(默认黑名单模式)
+    whitelist_mode: bool = False
+
     target_maps: list[str] = field(
         default_factory=lambda: ["凯瑞甘生存2", "Kerrigan Survival 2"]
     )
@@ -256,6 +264,9 @@ def load_config(path: Path | None = None) -> AppConfig:
     roster = data.get("roster", {})
     roster_sync = roster.get("sync", {}) if isinstance(roster.get("sync"), dict) else {}
     data_sources = data.get("data_sources", {})
+    ai = data.get("ai", {})
+    if not isinstance(ai, dict):
+        ai = {}
 
     blocklist_path = root / "config" / "blocklist.txt"
     blocklist_handles = _load_blocklist_file(blocklist_path)
@@ -285,6 +296,7 @@ def load_config(path: Path | None = None) -> AppConfig:
         scoring_preset=scoring_preset,
         dry_run=bool(actions.get("dry_run", True)),
         auto_kick_enabled=bool(actions.get("auto_kick_enabled", False)),
+        whitelist_mode=bool(actions.get("whitelist_mode", False)),
         kick_cooldown_sec=float(actions.get("kick_cooldown_sec", 5)),
         kick_menu_labels=list(
             actions.get("kick_menu_labels", ["移除玩家", "Kick Player"])
@@ -331,6 +343,9 @@ def load_config(path: Path | None = None) -> AppConfig:
         host_handle=str(data.get("host", {}).get("handle", "")),
         blocklist_handles=blocklist_handles,
         notify_high_suspicion=bool(ui.get("notify_high_suspicion", True)),
+        ai_api_base_url=str(ai.get("base_url", "https://api.deepseek.com/v1")),
+        ai_api_key=str(ai.get("api_key", "")),
+        ai_model=str(ai.get("model", "deepseek-chat")),
         vision_enabled=bool(vision.get("enabled", True)),
         vision_engine=str(vision.get("engine", "paddleocr")),
         vision_use_gpu=bool(vision.get("use_gpu", False)),
@@ -648,6 +663,7 @@ def save_user_config(config: AppConfig) -> Path:
         "[actions]",
         f"dry_run = {'true' if config.dry_run else 'false'}",
         f"auto_kick_enabled = {'true' if config.auto_kick_enabled else 'false'}",
+        f"whitelist_mode = {'true' if config.whitelist_mode else 'false'}",
         f"kick_menu_down_presses = {config.kick_menu_down_presses}",
         f"kick_fast_path = {'true' if config.kick_fast_path else 'false'}",
         f"kick_ocr_fallback = {'true' if config.kick_ocr_fallback else 'false'}",
@@ -664,6 +680,11 @@ def save_user_config(config: AppConfig) -> Path:
         "[ui]",
         f'window_title_contains = "{config.window_title_contains}"',
         f"notify_high_suspicion = {'true' if config.notify_high_suspicion else 'false'}",
+        "",
+        "[ai]",
+        f'api_base_url = "{config.ai_api_base_url}"',
+        f'api_key = "{config.ai_api_key}"',
+        f'model = "{config.ai_model}"',
         "",
         "[calibration]",
     ])

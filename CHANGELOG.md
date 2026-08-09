@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-08-04
+
+### Added
+
+- **AI 规则助手**：规则编辑器「AI 助手」填写 API Key（OpenAI 兼容：DeepSeek / Kimi / OpenAI / OpenRouter）用自然语言生成评分规则，自动校验后追加
+- **本地 IDE 编辑规则**：规则编辑器「IDE 编辑」导出规则文件并用 VSCode（或系统默认编辑器）打开，修改后「从文件重载」应用
+- **白名单模式**：主界面一键切换，自动踢出白名单（数据库白名单 + handle_trust_rules）以外的所有玩家，默认保持黑名单模式
+- README 新增「用 AI 助手编写规则」与「白名单模式」文档（变量表 / 运算符 / 提示词示例 / API Key 配置表）
+
 ## [1.2.1] - 2026-08-04
 
 ### Fixed
@@ -125,7 +134,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows portable exe and Inno Setup installer build scripts
 - Local replay indexing, auto-upload hook, GUI calibration
 
-[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.3.0
 [1.2.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.2.1
 [1.2.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.2.0
 [1.1.2]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.1.2

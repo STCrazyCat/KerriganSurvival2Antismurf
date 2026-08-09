@@ -470,14 +470,23 @@ class Orchestrator:
                 f"原因: 与主机同一对局时凯瑞甘阵营 MMR 异常升高"
                 f" (+{per:.0f}/次)",
             )
-        if self._engine.should_auto_kick(result) and self._is_local_host:
-            if not (self._local_handle and result.handle == self._local_handle):
+        if self._is_local_host and not (
+            self._local_handle and result.handle == self._local_handle
+        ):
+            if self._config.whitelist_mode:
+                # 白名单模式:仅保留白名单玩家,其余自动踢出
+                should_kick = not self._is_trusted_handle(result.handle)
+            else:
+                should_kick = self._engine.should_auto_kick(result)
+            if should_kick:
                 ok = self._kicker.kick_slot(result.slot_index)
-                await self._store.log_kick(
-                    result.handle, ok, self._config.dry_run
-                )
+                await self._store.log_kick(result.handle, ok, self._config.dry_run)
         if result.tier in ("high", "critical"):
             self.on_high_suspicion(result.handle, result.tier, result.score)
+
+    def _is_trusted_handle(self, handle: str) -> bool:
+        """是否命中 handle_trust_rules(白名单-20,白名单模式下不被踢)。"""
+        return any(trust.handle == handle for trust in self._config.handle_trust_rules)
 
     def _detect_same_match_spikes(
         self,

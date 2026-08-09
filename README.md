@@ -191,6 +191,13 @@ api_key = "your-token"
 - 玩家行点击 **「黑名单」** 加入并重新评估
 - 或编辑 `config/blocklist.txt`（每行一个句柄）
 
+### 白名单模式
+
+- 主界面按钮栏勾选 **「白名单模式」**：自动踢出白名单以外的所有玩家（仅白名单玩家可留在房间，适合私房/车队）
+- 白名单来源 = 数据库白名单（玩家行 **「白名单」**）或 **handle_trust_rules**（白名单 -20 规则）
+- 默认 **黑名单模式**（不勾选）：按嫌疑分阈值自动踢出，白名单玩家安全
+- 切换即时生效，配置保存至 `config/user.toml`（`whitelist_mode`）
+
 ### 设置面板
 
 主界面 **「设置」** 可配置：嫌疑阈值、社区 HTTP（KS2 Wiki）、Windows 通知等，保存至 `config/user.toml`。
@@ -292,6 +299,54 @@ flowchart LR
 4. **规则引擎** 对变量做比较运算，累加权重得到 0–100 嫌疑分  
 
 主界面 **「评分规则」** 提供分类变量菜单与运算符选择，可视化拼装运算式与嫌疑权重。
+
+### 用 AI 助手编写规则
+
+规则编辑器顶部 **「AI 助手」** 可用自然语言生成规则：填写 API Key（OpenAI 兼容接口，默认 DeepSeek）→ 输入需求 → 生成 → 预览确认后追加。
+
+#### 常用变量
+
+| 变量 | 说明 |
+|------|------|
+| `mmr.survivor` / `mmr.kerrigan` | 生存者 / 凯瑞甘核心 MMR |
+| `mmr.min` / `mmr.max` | 核心 MMR 最小 / 最大值 |
+| `mmr_playlike.max` | 反推核心 MMRplaylike 最大值 |
+| `playlike.avg_all` | 全局 playlike 均值（未扣 class） |
+| `role.mmr.角色名` | 角色官方 MMR |
+| `lift.core_max` | playlike 高于核心最大幅度 |
+| `spike.count` / `spike.max` | 异常对局数 / 最大幅度 |
+| `data.has_mmr` / `data.has_playlike` | 数据存在性 |
+| `blocklist.hit` | 黑名单标记 |
+| `history.win_rate` 等 | 手动战绩 |
+
+完整变量表见 **「评分规则」→ 编辑器 → 变量菜单**。
+
+#### 运算符
+
+`>=` `<=` `>` `<` `==` `!=`（比较）、`between`（介于）、`is_null` / `not_null`（为空 / 非空）；可对变量做 `+ - * /` 算术后再比较。
+
+#### 提示词示例
+
+```
+凯瑞甘核心 MMR 高于 3000 且 playlike 对局数 >= 5 时，加 30 嫌疑分
+```
+
+AI 返回 JSON 规则数组，程序自动校验后追加（不覆盖已有规则）。
+
+#### API Key 配置
+
+| 服务 | API 地址 | 模型 |
+|------|---------|------|
+| DeepSeek（默认） | `https://api.deepseek.com/v1` | `deepseek-chat` |
+| Kimi (Moonshot) | `https://api.moonshot.cn/v1` | `moonshot-v1-8k` |
+| OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
+| OpenRouter | `https://openrouter.ai/api/v1` | `openrouter/auto` |
+
+也可在 **「AI 助手」** 对话框内直接填写 / 修改，保存至 `config/user.toml`（`[ai]` 段）。
+
+### 用本地 IDE 编写规则
+
+规则编辑器顶部 **「IDE 编辑」** 将当前规则导出到 `config/rule_edit.toml` 并用 VSCode 打开（未安装 VSCode 时回退系统默认编辑器）；修改保存后点 **「从文件重载」** 应用。
 
 ### 评分规则分享（.txt / .toml）
 

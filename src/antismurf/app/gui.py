@@ -170,6 +170,14 @@ class AntiSmurfApp(ctk.CTk):
             )
             self._auto_kick_checkbox.pack(side="right", padx=10)
 
+        self._whitelist_mode_var = ctk.BooleanVar(value=self._config.whitelist_mode)
+        ctk.CTkCheckBox(
+            btn_bar,
+            text="白名单模式",
+            variable=self._whitelist_mode_var,
+            command=self._on_toggle_whitelist_mode,
+        ).pack(side="right", padx=10)
+
         # 状态文本行：固定高度，长文本自动换行，可通过纵向滑动条查看全部内容
         self._status_box = ctk.CTkTextbox(
             header,
@@ -844,6 +852,16 @@ class AntiSmurfApp(ctk.CTk):
         self._config.auto_kick_enabled = self._auto_kick_var.get()
         if self._orchestrator:
             self._orchestrator.update_config(self._config)
+
+    def _on_toggle_whitelist_mode(self) -> None:
+        self._config.whitelist_mode = self._whitelist_mode_var.get()
+        if self._orchestrator:
+            self._orchestrator.update_config(self._config)
+        self._log(
+            "白名单模式已启用：仅保留白名单玩家，其余自动踢出"
+            if self._config.whitelist_mode
+            else "已切换回黑名单模式（按嫌疑分踢出）"
+        )
 
     def on_close(self) -> None:
         if self._orchestrator and self._loop:
