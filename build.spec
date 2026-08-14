@@ -46,7 +46,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,  # UPX 压缩常触发杀软/Defender 误报,关闭
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,
@@ -55,4 +55,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=str(root / "installer" / "icon.ico"),
 )

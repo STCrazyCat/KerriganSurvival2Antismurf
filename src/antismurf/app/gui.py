@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import threading
+import time
 from typing import TYPE_CHECKING
 
 import customtkinter as ctk
@@ -104,6 +105,7 @@ class AntiSmurfApp(ctk.CTk):
         self._alerted_handles: set[str] = set()
         self._is_local_host: bool = False
         self._sc2_windows: list[Sc2WindowInfo] = []
+        self._last_refresh_click_at: float = 0.0
         self._list_only_mode = bool(
             self._config.memory_list_only and memory_scan_available()
         )
@@ -871,12 +873,25 @@ class AntiSmurfApp(ctk.CTk):
             self._log(f"已加入白名单: {handle}")
 
     def _manual_refresh(self) -> None:
-        """手动刷新:立即扫描一次房间玩家信息并确认更新。"""
+        """手动刷新:立即扫描一次房间玩家信息并确认更新。
+
+        1.5 秒内再次点击(连续刷新)时,除强制重新确认句柄位置外,
+        同时重新查看当前是否选择了 SC2 进程(进程失效自动重新选择)。
+        """
         if not self._orchestrator or not self._loop:
             self._log("后台未就绪，无法刷新")
             return
+        now = time.monotonic()
+        rapid = (
+            now - self._last_refresh_click_at
+            < self._config.memory_handle_reconfirm_threshold_sec
+        )
+        self._last_refresh_click_at = now
+        if rapid:
+            self._refresh_sc2_windows()
+            self._log("连续刷新：已重新确认 SC2 进程与句柄位置")
         future = asyncio.run_coroutine_threadsafe(
-            self._orchestrator.refresh_lobby_now(), self._loop
+            self._orchestrator.refresh_lobby_now(force=rapid), self._loop
         )
 
         def done(f) -> None:

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-08-14
+
+### Changed
+
+- **降低安装包误报风险**：关闭 UPX 压缩（常触发杀软/Defender 误报）、为可执行文件与安装程序增加应用图标（版本元数据更完整）
+- **连续刷新确认 SC2 进程**：1.5 秒内再次点击「刷新」时，除强制重新确认句柄位置外，同时重新查看当前是否选择了 SC2 进程（进程失效自动重新选择）
+
 ## [1.4.2] - 2026-08-14
 
 ### Added
@@ -167,7 +174,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows portable exe and Inno Setup installer build scripts
 - Local replay indexing, auto-upload hook, GUI calibration
 
-[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.4.2...HEAD
+[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.4.3...HEAD
+[1.4.3]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.3
 [1.4.2]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.2
 [1.4.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.1
 [1.4.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.0
