@@ -62,14 +62,14 @@ py -3.12 -m venv .venv
 # 核心依赖
 pip install -r requirements.txt
 
-# OCR 依赖（PaddlePaddle 需从官方源安装，勿直接 pip install paddlepaddle）
+# OCR/视觉依赖（可选：仅 UI 校准与视觉识别备用；内存模式 6 主路径无需安装）
 .\scripts\install_vision_deps.ps1
 
 # 或一步安装（核心 + OCR）
 .\scripts\install_deps.ps1
 ```
 
-若只需录像扫描、规则编辑等**非 OCR 功能**，可跳过 vision 安装；大厅视觉识别需完成 `install_vision_deps.ps1`。
+内存模式 6（默认主路径）**无需** OCR/视觉依赖；仅在需要 UI 校准等视觉识别功能时才安装 `install_vision_deps.ps1`。
 
 **推荐显示模式**：星际争霸2 使用 **窗口化 + 最大化**（非独占全屏）。程序会截取 SC2 **客户区**进行 OCR，与窗口边框无关。
 
