@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-08-14
+
+### Added
+
+- **句柄位置自动/手动更新**：游戏版本更新导致固定跳转（SC2_x64.exe+0x3E2F340）失效时，自动在主机句柄附近嗅探多格式存储（ASCII / profile_triplet / 指针间接），结合附近信息（profile_id 字段 / struct 头 0x5332 / 显示名）解读确认主机句柄
+- **位置确认状态**：主界面状态栏显示「句柄位置=已确认/未确认」与「玩家句柄=已抓到」；房间无玩家时通过主机句柄附近嗅探确认抓取能力
+- **手动刷新策略**：已确认句柄位置时刷新仅重新读取（不嗅探）；1.5 秒内多次刷新自动强制重新确认位置
+- **嗅探结果持久化**：确认的新主机句柄模块偏移自动写入校准档（data/probe_calibration.json），下次启动免嗅探直接使用
+- 配置项：`memory.host_anchor_sniff_enabled`、`memory.handle_reconfirm_threshold_sec`（默认 1.5）
+
 ## [1.3.1] - 2026-08-09
 
 ### Added
@@ -143,7 +153,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows portable exe and Inno Setup installer build scripts
 - Local replay indexing, auto-upload hook, GUI calibration
 
-[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.0
 [1.3.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.3.1
 [1.3.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.3.0
 [1.2.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.2.1

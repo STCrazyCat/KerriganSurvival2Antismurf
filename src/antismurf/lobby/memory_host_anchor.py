@@ -52,6 +52,215 @@ class VicinityHandleHit:
     offset_from_anchor: int
 
 
+@dataclass(frozen=True)
+class SniffedHandleCandidate:
+    """A handle storage candidate found near the host anchor, with nearby
+    storage interpretation used to confirm whether it is a real lobby player
+    handle (not a random string in module data)."""
+
+    handle: str
+    address: int
+    encoding: str
+    offset_from_anchor: int
+    nearby_profile_id: int | None = None
+    nearby_name: str | None = None
+    struct_header_ok: bool = False
+    score: float = 0.0
+    evidence: tuple[str, ...] = ()
+
+    def summary_line(self) -> str:
+        bits = [f"score={self.score:.0f}"]
+        if self.nearby_profile_id is not None:
+            bits.append(f"profile_id={self.nearby_profile_id}")
+        if self.nearby_name:
+            bits.append(f"name={self.nearby_name!r}")
+        if self.struct_header_ok:
+            bits.append("struct_header")
+        return (
+            f"{self.handle} @ 0x{self.address:X} ({self.encoding}, "
+            f"Δ{self.offset_from_anchor:+d}) [{'|'.join(bits)}]"
+        )
+
+
+def _extract_nearby_ascii_name(
+    data: bytes,
+    rel_offset: int,
+    *,
+    window: int = 160,
+) -> str | None:
+    """Find a printable ASCII name near a handle candidate (ignoring the handle itself)."""
+    start = max(0, rel_offset - window)
+    end = min(len(data), rel_offset + window)
+    chunk = data[start:end]
+    best: str | None = None
+    best_dist = window
+    cursor = 0
+    while cursor < len(chunk):
+        if 0x21 <= chunk[cursor] <= 0x7E:
+            j = cursor
+            while j < len(chunk) and 0x21 <= chunk[j] <= 0x7E:
+                j += 1
+            text = chunk[cursor:j].decode("ascii", errors="ignore")
+            if 3 <= len(text) <= 40 and not is_valid_handle(text):
+                dist = abs((start + cursor) - rel_offset)
+                if dist < best_dist:
+                    best_dist = dist
+                    best = text
+            cursor = j
+        else:
+            cursor += 1
+    return best
+
+
+def _interpret_nearby_storage(
+    data: bytes,
+    rel_offset: int,
+    handle: str,
+) -> tuple[int | None, str | None, bool, list[str]]:
+    """Interpret bytes near a handle candidate to confirm it is a lobby player
+    handle storage: matching profile_id field, nearby display name, and/or a
+    lobby member struct header (program == 0x5332) at offset -0x20."""
+    evidence: list[str] = []
+    nearby_profile_id: int | None = None
+    try:
+        profile_id = int(handle.rsplit("-", 1)[-1])
+    except ValueError:
+        profile_id = None
+
+    struct_ok = False
+    # 1) profile_id 字段:句柄尾部数字以 4 字节 LE 出现在 ±0x40 内
+    if profile_id is not None:
+        needle = struct.pack("<I", profile_id)
+        search_start = max(0, rel_offset - 0x40)
+        search_end = min(len(data) - 4, rel_offset + 0x40)
+        if search_start <= search_end:
+            found = data.find(needle, search_start, search_end + 4)
+            if found >= 0:
+                nearby_profile_id = profile_id
+                evidence.append(f"profile_id 字段 @Δ{found - rel_offset:+d}")
+
+    # 2) struct 头:handle 地址 -0x20 处 program == 0x5332
+    header_rel = rel_offset - 0x20
+    if header_rel >= 0 and header_rel + 0x18 <= len(data):
+        program = struct.unpack_from("<I", data, header_rel + 0x14)[0]
+        if program == 0x5332:
+            struct_ok = True
+            evidence.append("struct 头 program=0x5332")
+
+    # 3) 附近显示名字
+    name = _extract_nearby_ascii_name(data, rel_offset)
+    if name:
+        evidence.append(f"附近名字 {name!r}")
+
+    return nearby_profile_id, name, struct_ok, evidence
+
+
+def sniff_host_handle_storage(
+    process_handle,
+    modules,
+    *,
+    anchor_offset: int | str = DEFAULT_HOST_HANDLE_MODULE_OFFSET,
+    radius: int = DEFAULT_HOST_ANCHOR_VICINITY_RADIUS,
+    known_host_handle: str = "",
+) -> list[SniffedHandleCandidate]:
+    """Sniff multi-format handle storages near the host anchor and rank them by
+    nearby-storage interpretation.  Returns candidates sorted by score desc.
+
+    Covers the case where the fixed module offset moved after a game update:
+    the host handle is still stored somewhere in the module table near the old
+    anchor, and surrounding struct/profile/name bytes confirm which candidate is
+    the real lobby host handle.
+    """
+    module = _find_sc2_module(modules, DEFAULT_SC2_MODULE_NAMES)
+    if module is None:
+        return []
+
+    anchor_off = parse_module_offset(anchor_offset)
+    if anchor_off < 0 or anchor_off >= module.size:
+        return []
+    anchor_address = module.base + anchor_off
+
+    span_start = max(module.base, anchor_address - radius)
+    span_end = min(module.base + module.size, anchor_address + radius)
+    if span_end <= span_start:
+        return []
+
+    data = _read_memory(process_handle, span_start, span_end - span_start)
+    if not data:
+        return []
+
+    candidates: dict[str, SniffedHandleCandidate] = {}
+
+    def _add(handle: str, address: int, encoding: str) -> None:
+        rel = address - span_start
+        profile_id, name, struct_ok, evidence = _interpret_nearby_storage(
+            data, rel, handle
+        )
+        distance = abs(address - anchor_address)
+        if address == anchor_address:
+            score = 100.0
+            evidence = ["锚点原位命中"] + evidence
+        elif distance <= 0x100:
+            score = 60.0
+            evidence = [f"距锚点 Δ{distance:+d}"] + evidence
+        elif distance <= 0x1000:
+            score = 35.0
+            evidence = [f"模块表 Δ{distance:+d}"] + evidence
+        else:
+            score = 15.0
+            evidence = [f"锚点邻近 Δ{distance:+d}"] + evidence
+        if profile_id is not None:
+            score += 40.0
+        if struct_ok:
+            score += 30.0
+        if name:
+            score += 20.0
+        if known_host_handle and handle == known_host_handle:
+            score += 50.0
+            evidence = ["匹配已知主机句柄"] + evidence
+        existing = candidates.get(handle)
+        if existing is None or score > existing.score:
+            candidates[handle] = SniffedHandleCandidate(
+                handle=handle,
+                address=address,
+                encoding=encoding,
+                offset_from_anchor=address - anchor_address,
+                nearby_profile_id=profile_id,
+                nearby_name=name,
+                struct_header_ok=struct_ok,
+                score=score,
+                evidence=tuple(evidence),
+            )
+
+    for rel_offset, handle, _encoding in extract_handle_hits(data):
+        _add(handle, span_start + rel_offset, StringEncoding.ASCII_Z.value)
+    for triplet in extract_profile_triplets(data, base_offset=span_start):
+        _add(handle_from_triplet(triplet), triplet.offset, "profile_triplet")
+
+    return sorted(candidates.values(), key=lambda item: (-item.score, item.address))
+
+
+def confirm_host_handle_via_sniff(
+    process_handle,
+    modules,
+    *,
+    anchor_offset: int | str = DEFAULT_HOST_HANDLE_MODULE_OFFSET,
+    radius: int = DEFAULT_HOST_ANCHOR_VICINITY_RADIUS,
+    min_score: float = 60.0,
+) -> SniffedHandleCandidate | None:
+    """Best-effort confirm a host handle by sniffing near the anchor."""
+    candidates = sniff_host_handle_storage(
+        process_handle,
+        modules,
+        anchor_offset=anchor_offset,
+        radius=radius,
+    )
+    for candidate in candidates:
+        if candidate.score >= min_score:
+            return candidate
+    return None
+
+
 def parse_module_offset(value: int | str) -> int:
     if isinstance(value, str):
         return int(value.strip(), 0)

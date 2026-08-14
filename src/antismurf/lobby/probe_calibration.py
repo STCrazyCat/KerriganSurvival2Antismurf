@@ -25,6 +25,7 @@ class CalibratedProfile:
     struct_base: int | None = None
     name_offset: int | None = None
     handle_offset: int | None = None
+    host_handle_module_offset: int | None = None
     source_mode: str = "manual"
     created_at: str = ""
     notes: str = ""
@@ -39,6 +40,10 @@ class CalibratedProfile:
         data["handle_address"] = format_address(self.handle_address)
         if self.struct_base is not None:
             data["struct_base"] = format_address(self.struct_base)
+        if self.host_handle_module_offset is not None:
+            data["host_handle_module_offset"] = format_address(
+                self.host_handle_module_offset
+            )
         return data
 
     @classmethod
@@ -55,6 +60,11 @@ class CalibratedProfile:
             else None,
             name_offset=int(data["name_offset"]) if data.get("name_offset") is not None else None,
             handle_offset=int(data["handle_offset"]) if data.get("handle_offset") is not None else None,
+            host_handle_module_offset=parse_hex_address(
+                str(data["host_handle_module_offset"])
+            )
+            if data.get("host_handle_module_offset")
+            else None,
             source_mode=str(data.get("source_mode", "manual")),
             created_at=str(data.get("created_at", "")),
             notes=str(data.get("notes", "")),
@@ -117,6 +127,33 @@ def load_profile(path: str | Path | None = None) -> CalibratedProfile | None:
         return None
     payload = json.loads(target.read_text(encoding="utf-8"))
     return CalibratedProfile.from_dict(payload["profile"])
+
+
+def update_host_handle_offset(
+    offset: int,
+    path: str | Path | None = None,
+    *,
+    expected_handle: str = "",
+    notes: str = "",
+) -> Path:
+    """Persist a sniff-confirmed host handle module offset into the calibration
+    file (keeping existing fields). Called after auto/manual re-confirmation."""
+    profile = load_profile(path)
+    if profile is None:
+        profile = CalibratedProfile(
+            expected_handle=expected_handle,
+            expected_name="",
+            name_address=0,
+            handle_address=0,
+            source_mode="sniff",
+        )
+    profile.host_handle_module_offset = int(offset)
+    profile.source_mode = "sniff"
+    if expected_handle:
+        profile.expected_handle = expected_handle
+    if notes:
+        profile.notes = notes
+    return save_profile(profile, path)
 
 
 def build_profile_from_roster_discovery(

@@ -119,6 +119,12 @@ class LobbyAutoConfirmSnapshot:
     member_count: int = 0
     members: list[LobbyMemberView] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    # 句柄位置确认状态:确认当前是否抓到房间内玩家句柄
+    handle_location_state: str = "unknown"  # confirmed / unconfirmed
+    handle_location_source: str = "none"    # anchor / sniff / accounts / roster
+    host_handle_address: int | None = None
+    host_handle_encoding: str | None = None
+    roster_verified: bool = False
 
     def headline(self) -> str:
         base = f"0x{self.record_base:X}" if self.record_base is not None else "-"
@@ -249,6 +255,9 @@ class LobbyAutoConfirmSession:
         fallback_host_handle: str = "",
         enter_confirm_ticks: int = 2,
         exit_confirm_ticks: int = 4,
+        sniff_enabled: bool = True,
+        sniff_radius: int = 8192,
+        calibration_path: str | None = None,
     ) -> None:
         self._process = process_handle
         self._pid = pid
@@ -258,6 +267,9 @@ class LobbyAutoConfirmSession:
         self._rescan_budget_sec = rescan_budget_sec
         self._rescan_every_ticks = max(1, rescan_every_ticks)
         self._default_rescan_every_ticks = self._rescan_every_ticks
+        self._sniff_enabled = sniff_enabled
+        self._sniff_radius = sniff_radius
+        self._calibration_path = calibration_path
         self._presence = RoomPresenceDebouncer(
             enter_required=enter_confirm_ticks,
             exit_required=exit_confirm_ticks,
@@ -269,6 +281,12 @@ class LobbyAutoConfirmSession:
         self._last_good_members: list[tuple[int, LobbyMemberRecord]] = []
         self._last_member_keys: tuple[tuple[str, str], ...] = ()
         self._last_phase = LobbyPhase.UNKNOWN
+        # 句柄位置确认状态
+        self._handle_location_state = "unknown"
+        self._handle_location_source = "none"
+        self._host_handle_address: int | None = None
+        self._host_handle_encoding: str | None = None
+        self._sniffed_offset: int | None = None
         self.snapshots: list[LobbyAutoConfirmSnapshot] = []
         self.events: list[str] = []
 
@@ -279,10 +297,34 @@ class LobbyAutoConfirmSession:
             offset=self._host_offset,
         )
         if anchor is not None:
+            self._mark_host_confirmed(
+                anchor.handle,
+                getattr(anchor, "handle_address", None),
+                getattr(anchor, "encoding", ""),
+                "anchor",
+            )
             host_name: str | None = None
             if self._calibration and self._calibration.expected_handle == anchor.handle:
                 host_name = self._calibration.expected_name or None
             return anchor.handle, True, host_name
+
+        # 固定跳转失效 → 在主机句柄附近嗅探(多格式存储 + 附近信息解读)
+        if self._sniff_enabled:
+            candidate = self._sniff_host()
+            if candidate is not None:
+                self._mark_host_confirmed(
+                    candidate.handle,
+                    candidate.address,
+                    candidate.encoding,
+                    "sniff",
+                )
+                logger.info(
+                    "主机句柄经嗅探确认: %s @ 0x%X (%s)",
+                    candidate.handle,
+                    candidate.address,
+                    candidate.encoding,
+                )
+                return candidate.handle, True, None
 
         from antismurf.lobby.memory_reader import detect_local_handle
 
@@ -292,15 +334,91 @@ class LobbyAutoConfirmSession:
             host_anchor_offset=self._host_offset,
         )
         if detected:
+            self._handle_location_state = "unconfirmed"
+            self._handle_location_source = "accounts"
+            self._host_handle_address = None
             return detected, True, None
 
         if self._fallback_host_handle:
             from antismurf.models.player import is_valid_handle
 
             if is_valid_handle(self._fallback_host_handle):
+                self._handle_location_state = "unconfirmed"
+                self._handle_location_source = "fallback"
                 return self._fallback_host_handle, False, None
 
+        self._handle_location_state = "unconfirmed"
+        self._handle_location_source = "none"
+        self._host_handle_address = None
         return None, False, None
+
+    def _mark_host_confirmed(self, handle: str, address: int, encoding: str, source: str) -> None:
+        self._handle_location_state = "confirmed"
+        self._handle_location_source = source
+        self._host_handle_address = address
+        self._host_handle_encoding = encoding
+
+    def _sniff_host(self):
+        from antismurf.lobby.memory_host_anchor import (
+            confirm_host_handle_via_sniff,
+        )
+        from antismurf.lobby.memory_probe import build_module_map
+
+        try:
+            modules = build_module_map(self._pid)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("build_module_map failed: %s", exc)
+            return None
+        candidate = confirm_host_handle_via_sniff(
+            self._process,
+            modules,
+            anchor_offset=self._host_offset,
+            radius=self._sniff_radius,
+            min_score=60.0,
+        )
+        if candidate is None:
+            return None
+        module = next(
+            (m for m in modules if str(getattr(m, "name", "")).lower().startswith("sc2")),
+            None,
+        )
+        if module is not None:
+            offset = candidate.address - int(module.base)
+            if 0 <= offset < int(module.size) and offset != self._sniffed_offset:
+                self._sniffed_offset = offset
+                self._persist_sniffed_offset(offset, candidate.handle)
+        return candidate
+
+    def _persist_sniffed_offset(self, offset: int, handle: str) -> None:
+        try:
+            from antismurf.lobby.probe_calibration import update_host_handle_offset
+
+            update_host_handle_offset(
+                offset,
+                self._calibration_path,
+                expected_handle=handle,
+                notes="嗅探确认的主机句柄模块偏移(随版本自动更新)",
+            )
+            logger.info("已保存嗅探确认的主机句柄偏移 0x%X", offset)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("保存嗅探偏移失败: %s", exc)
+
+    def _reconfirm_handle_location(self, force: bool) -> None:
+        """force 时重新确认句柄位置:即使锚点可读也用嗅探复核。"""
+        if not force or not self._sniff_enabled:
+            return
+        if self._handle_location_state == "unconfirmed":
+            return
+        candidate = self._sniff_host()
+        if candidate is not None and candidate.address != self._host_handle_address:
+            self._mark_host_confirmed(
+                candidate.handle, candidate.address, candidate.encoding, "sniff"
+            )
+            logger.info(
+                "手动刷新:句柄位置更新为 0x%X (%s)",
+                candidate.address,
+                candidate.encoding,
+            )
 
     def _resolve_base(self, host_handle: str, *, force_rescan: bool) -> tuple[int | None, str]:
         if self._cached_base is not None:
@@ -379,9 +497,14 @@ class LobbyAutoConfirmSession:
                 host_anchor_ok=False,
                 phase=LobbyPhase.UNKNOWN,
                 notes=["未能读取主机锚点句柄"],
+                handle_location_state=self._handle_location_state,
+                handle_location_source=self._handle_location_source,
             )
             self.snapshots.append(snapshot)
             return snapshot
+
+        if force_rescan:
+            self._reconfirm_handle_location(True)
 
         should_rescan = self._should_rescan(host_handle, force_rescan=force_rescan)
         record_base, source = self._resolve_base(host_handle, force_rescan=should_rescan)
@@ -400,6 +523,13 @@ class LobbyAutoConfirmSession:
             record_base=record_base,
             members=members_raw,
         )
+        roster_verified = bool(
+            record_base is not None
+            and any(item.handle == host_handle for _slot, item in members_raw)
+        )
+        if roster_verified:
+            self._handle_location_state = "confirmed"
+            self._handle_location_source = "roster"
         if raw_in_room and members_raw:
             self._last_good_members = list(members_raw)
 
@@ -449,6 +579,11 @@ class LobbyAutoConfirmSession:
             member_count=len(members),
             members=members,
             notes=notes,
+            handle_location_state=self._handle_location_state,
+            handle_location_source=self._handle_location_source,
+            host_handle_address=self._host_handle_address,
+            host_handle_encoding=self._host_handle_encoding,
+            roster_verified=roster_verified,
         )
         member_keys = tuple((item.handle, item.display_name) for item in members)
         self._emit_events(snapshot, member_keys)

@@ -165,10 +165,14 @@ def test_roster_list_only_syncs_players_without_scoring() -> None:
                     "record_base": 0x1F62EF034F0,
                     "record_base_source": "profile_scan",
                     "member_count": 2,
+                    "handle_location_state": "confirmed",
+                    "handle_location_source": "anchor",
+                    "host_handle_address": None,
+                    "roster_verified": True,
                 },
             )()
 
-            def read_lobby_snapshot(self):
+            def read_lobby_snapshot(self, force_reconfirm: bool = False):
                 return snapshot
 
             def reset_session(self) -> None:
@@ -206,9 +210,13 @@ def test_refresh_lobby_now_scans_and_notifies() -> None:
                 record_base=0x1234,
                 record_base_source="scan",
                 member_count=1,
+                handle_location_state="confirmed",
+                handle_location_source="anchor",
+                host_handle_address=0x2000,
+                roster_verified=True,
             )
 
-        def read_lobby_snapshot(self):
+        def read_lobby_snapshot(self, force_reconfirm: bool = False):
             return SimpleNamespace(
                 error=None,
                 handles=[],

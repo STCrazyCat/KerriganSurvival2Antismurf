@@ -31,6 +31,10 @@ class RosterScanState:
     room_created: bool = False
     member_count: int = 0
     scan_count: int = 0
+    handle_location_state: str = "unknown"  # confirmed / unconfirmed
+    handle_location_source: str = "none"    # anchor / sniff / accounts / roster
+    host_handle_address: int | None = None
+    roster_verified: bool = False
 
 
 class MemoryLobbyReader:
@@ -84,7 +88,10 @@ class MemoryLobbyReader:
             close_process(self._process_handle)
             self._process_handle = None
 
-    def read_lobby_snapshot(self) -> LobbySnapshot:
+    def read_lobby_snapshot(
+        self,
+        force_reconfirm: bool = False,
+    ) -> LobbySnapshot:
         if not self._config.memory_enabled:
             return LobbySnapshot(
                 None,
@@ -140,7 +147,7 @@ class MemoryLobbyReader:
                 error=str(exc),
             )
 
-        snap = session.tick()
+        snap = session.tick(force_rescan=force_reconfirm)
         self._roster_state.scan_count = snap.tick
         self._roster_state.phase = snap.phase.value
         self._roster_state.in_room = snap.in_room
@@ -148,6 +155,10 @@ class MemoryLobbyReader:
         self._roster_state.member_count = snap.member_count
         self._roster_state.record_base = snap.record_base
         self._roster_state.record_base_source = snap.record_base_source
+        self._roster_state.handle_location_state = snap.handle_location_state
+        self._roster_state.handle_location_source = snap.handle_location_source
+        self._roster_state.host_handle_address = snap.host_handle_address
+        self._roster_state.roster_verified = snap.roster_verified
 
         if snap.host_handle in {"", "?"}:
             return LobbySnapshot(
@@ -187,14 +198,23 @@ class MemoryLobbyReader:
             return self._auto_confirm
 
         self._process_handle = open_process_for_read(pid)
+        host_offset = self._config.memory_host_handle_module_offset
+        if (
+            self._calibration
+            and self._calibration.host_handle_module_offset is not None
+        ):
+            host_offset = self._calibration.host_handle_module_offset
         self._auto_confirm = LobbyAutoConfirmSession(
             self._process_handle,
             pid=pid,
-            host_handle_module_offset=self._config.memory_host_handle_module_offset,
+            host_handle_module_offset=host_offset,
             calibration=self._calibration,
             rescan_budget_sec=self._config.memory_roster_rescan_budget_sec,
             rescan_every_ticks=max(1, self._config.memory_roster_rescan_every_scans),
             fallback_host_handle=self._config.host_handle,
+            sniff_enabled=self._config.memory_host_anchor_sniff_enabled,
+            sniff_radius=self._config.memory_host_anchor_scan_radius,
+            calibration_path=self._config.memory_calibration_path,
         )
         return self._auto_confirm
 
@@ -287,6 +307,10 @@ class MemoryLobbyReader:
             "roster_in_room": roster.in_room,
             "roster_room_created": roster.room_created,
             "roster_member_count": roster.member_count,
+            "handle_location_state": roster.handle_location_state,
+            "handle_location_source": roster.handle_location_source,
+            "host_handle_address": roster.host_handle_address,
+            "roster_verified": roster.roster_verified,
             "calibration_loaded": self._calibration is not None,
             "window_found": snapshot.window_found,
             "in_ks2_lobby": roster.in_room and bool(snapshot.handles),

@@ -64,6 +64,7 @@ class Orchestrator:
         self._last_lobby_snapshot = None
         self._last_roster_status: dict[str, object] = {}
         self._same_match_notified: set[str] = set()
+        self._last_manual_refresh_at: float = 0.0
         self._last_scan_error: str | None = None
 
     @property
@@ -172,12 +173,17 @@ class Orchestrator:
 
         await self._process_lobby_snapshot()
 
-    async def _scan_lobby_snapshot(self) -> None:
-        """立即扫描一次 SC2 大厅内存快照并更新缓存状态。"""
+    async def _scan_lobby_snapshot(self, force_reconfirm: bool = False) -> None:
+        """立即扫描一次 SC2 大厅内存快照并更新缓存状态。
+
+        force_reconfirm=True 时强制重新确认句柄位置(锚点失效时嗅探,
+        已确认时用附近嗅探复核)——由手动刷新节流触发。
+        """
         if self._memory_reader is None:
             return
         self._last_lobby_snapshot = await asyncio.to_thread(
-            self._memory_reader.read_lobby_snapshot
+            self._memory_reader.read_lobby_snapshot,
+            force_reconfirm,
         )
         self._last_memory_scan_at = time.monotonic()
         state = self._memory_reader.roster_state
@@ -188,6 +194,10 @@ class Orchestrator:
             "record_base": state.record_base,
             "record_base_source": state.record_base_source,
             "member_count": state.member_count,
+            "handle_location_state": state.handle_location_state,
+            "handle_location_source": state.handle_location_source,
+            "host_handle_address": state.host_handle_address,
+            "roster_verified": state.roster_verified,
         }
         snap = self._last_lobby_snapshot
         self._last_scan_error = snap.error if snap else None
@@ -306,11 +316,21 @@ class Orchestrator:
             await self._check_replay_upload()
         self._notify()
 
-    async def refresh_lobby_now(self) -> bool:
-        """手动刷新:立即扫描一次房间并重新评估玩家,返回是否成功执行。"""
+    async def refresh_lobby_now(self, *, force: bool = False) -> bool:
+        """手动刷新:立即扫描一次房间并重新评估玩家。
+
+        已确认句柄位置时仅重新读取(不嗅探);若用户在 1.5 秒内多次刷新
+        或显式 force,则强制重新确认句柄位置(触发附近嗅探复核)。
+        """
         if not self._config.memory_enabled or self._memory_reader is None:
             return False
-        await self._scan_lobby_snapshot()
+        now = time.monotonic()
+        rapid = (
+            now - self._last_manual_refresh_at
+            < self._config.memory_handle_reconfirm_threshold_sec
+        )
+        self._last_manual_refresh_at = now
+        await self._scan_lobby_snapshot(force_reconfirm=force or rapid)
         await self._process_lobby_snapshot()
         return True
 

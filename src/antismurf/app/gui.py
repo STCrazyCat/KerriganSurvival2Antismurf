@@ -430,6 +430,20 @@ class AntiSmurfApp(ctk.CTk):
             parts.append("未在房间")
         if base:
             parts.append(f"基址=0x{int(base):X}")
+        # 句柄位置确认状态:是否抓到房间内玩家句柄
+        loc_state = roster.get("handle_location_state", "unknown")
+        loc_source = roster.get("handle_location_source", "none")
+        if loc_state == "confirmed":
+            if loc_source == "roster":
+                parts.append("句柄位置=已确认(roster)")
+            else:
+                addr = roster.get("host_handle_address")
+                addr_text = f"@0x{int(addr):X}" if addr else ""
+                parts.append(f"句柄位置=已确认({loc_source}){addr_text}")
+        else:
+            parts.append("句柄位置=未确认")
+        if roster.get("roster_verified") and in_room:
+            parts.append("玩家句柄=已抓到")
         if err:
             parts.append(f"提示={err}")
         return " | ".join(parts)

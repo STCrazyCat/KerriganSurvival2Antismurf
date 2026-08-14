@@ -166,6 +166,8 @@ class AppConfig:
     memory_host_handle_module_offset: int = 0x3E2F340
     memory_host_anchor_scan_radius: int = 8192
     memory_host_anchor_enabled: bool = True
+    memory_host_anchor_sniff_enabled: bool = True
+    memory_handle_reconfirm_threshold_sec: float = 1.5
     memory_scan_mode: str = "roster"
     memory_calibration_path: str = "data/probe_calibration.json"
     memory_roster_rescan_budget_sec: float = 5.0
@@ -378,6 +380,12 @@ def load_config(path: Path | None = None) -> AppConfig:
         ),
         memory_host_anchor_scan_radius=int(memory.get("host_anchor_scan_radius", 8192)),
         memory_host_anchor_enabled=bool(memory.get("host_anchor_enabled", True)),
+        memory_host_anchor_sniff_enabled=bool(
+            memory.get("host_anchor_sniff_enabled", True)
+        ),
+        memory_handle_reconfirm_threshold_sec=float(
+            memory.get("handle_reconfirm_threshold_sec", 1.5)
+        ),
         memory_scan_mode=str(memory.get("scan_mode", "roster")),
         memory_calibration_path=str(
             memory.get("calibration_path", "data/probe_calibration.json")
@@ -751,6 +759,8 @@ def save_user_config(config: AppConfig) -> Path:
         f"host_handle_module_offset = \"0x{config.memory_host_handle_module_offset:X}\"",
         f"host_anchor_scan_radius = {config.memory_host_anchor_scan_radius}",
         f"host_anchor_enabled = {'true' if config.memory_host_anchor_enabled else 'false'}",
+        f"host_anchor_sniff_enabled = {'true' if config.memory_host_anchor_sniff_enabled else 'false'}",
+        f"handle_reconfirm_threshold_sec = {config.memory_handle_reconfirm_threshold_sec}",
         f"scan_mode = \"{config.memory_scan_mode}\"",
         f"calibration_path = \"{config.memory_calibration_path}\"",
         f"roster_rescan_budget_sec = {config.memory_roster_rescan_budget_sec}",
