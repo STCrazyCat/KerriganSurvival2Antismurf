@@ -2,7 +2,7 @@
 from pathlib import Path
 
 root = Path(SPECPATH)
-exe_name = "AntiSmurf-Memory"
+exe_name = "AntiSmurf"
 
 a = Analysis(
     [str(root / "main.py")],

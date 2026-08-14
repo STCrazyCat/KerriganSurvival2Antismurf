@@ -1,4 +1,4 @@
-# Build AntiSmurf-Memory.exe and Windows installer (Inno Setup)
+# Build AntiSmurf.exe and Windows installer (Inno Setup)
 
 param(
     [switch]$GrayRelease,
@@ -30,9 +30,9 @@ Write-Host "Step 1/3: PyInstaller ..."
 python -m PyInstaller build.spec --noconfirm
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-$ExePath = Join-Path $Root "dist\AntiSmurf-Memory.exe"
+$ExePath = Join-Path $Root "dist\AntiSmurf.exe"
 if (-not (Test-Path $ExePath)) {
-    Write-Error "dist\AntiSmurf-Memory.exe not found after PyInstaller. Run from repo root after: pip install -r requirements.txt"
+    Write-Error "dist\AntiSmurf.exe not found after PyInstaller. Run from repo root after: pip install -r requirements.txt"
 }
 
 $IsccCandidates = @(
@@ -48,7 +48,7 @@ $IsccCandidates = @($IsccCandidates | Where-Object { $_ -and (Test-Path $_) })
 
 if ($IsccCandidates.Count -eq 0) {
     Write-Host ""
-    Write-Host "Inno Setup 6 not found. Portable exe ready: dist\AntiSmurf-Memory.exe"
+    Write-Host "Inno Setup 6 not found. Portable exe ready: dist\AntiSmurf.exe"
     exit 0
 }
 
@@ -56,35 +56,35 @@ $Iscc = $IsccCandidates[0]
 $VersionNumeric = ($Version -replace '-.*$', '') + '.0'
 Write-Host "Step 2/3: Inno Setup ..."
 Write-Host "  ISCC: $Iscc"
-& "$Iscc" "/DAppVersion=$Version" "/DAppVersionNumeric=$VersionNumeric" "/DAppURL=$AppUrl" "installer\AntiSmurf-Memory.iss"
+& "$Iscc" "/DAppVersion=$Version" "/DAppVersionNumeric=$VersionNumeric" "/DAppURL=$AppUrl" "installer\AntiSmurf.iss"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-$InstallerPath = Join-Path $Root "dist\AntiSmurf-Memory-Setup-$Version.exe"
+$InstallerPath = Join-Path $Root "dist\AntiSmurf-Setup-$Version.exe"
 if (-not (Test-Path $InstallerPath)) {
-    Write-Error "Expected installer not found: dist\AntiSmurf-Memory-Setup-$Version.exe"
+    Write-Error "Expected installer not found: dist\AntiSmurf-Setup-$Version.exe"
 }
 
 Write-Host "Step 3/3: Portable zip ..."
-$PortableZip = Join-Path $Root "dist\AntiSmurf-Memory-$Version-portable.zip"
+$PortableZip = Join-Path $Root "dist\AntiSmurf-$Version-portable.zip"
 $Staging = Join-Path $Root "dist\_portable_staging"
 if (Test-Path $Staging) { Remove-Item $Staging -Recurse -Force }
 New-Item -ItemType Directory -Path (Join-Path $Staging "config") -Force | Out-Null
 New-Item -ItemType Directory -Path (Join-Path $Staging "data") -Force | Out-Null
-Copy-Item $ExePath (Join-Path $Staging "AntiSmurf-Memory.exe")
+Copy-Item $ExePath (Join-Path $Staging "AntiSmurf.exe")
 Copy-Item (Join-Path $Root "config\user.toml.example") (Join-Path $Staging "config\user.toml.example")
 Copy-Item (Join-Path $Root "config\blocklist.txt") (Join-Path $Staging "config\blocklist.txt") -ErrorAction SilentlyContinue
 Copy-Item (Join-Path $Root "docs\规则设置手册.md") (Join-Path $Staging "规则设置手册.md") -ErrorAction SilentlyContinue
 $ReleaseNotes = @"
-AntiSmurf 内存扫描版 v$Version
-==============================
+AntiSmurf v$Version
+==============
 
 便携版目录说明：
-  AntiSmurf-Memory.exe   主程序（双击运行）
-  config\                配置文件（首次可将 user.toml.example 复制为 user.toml）
-  data\                  运行时数据（数据库、校准文件等，自动创建）
+  AntiSmurf.exe         主程序（双击运行）
+  config\               配置文件（首次可将 user.toml.example 复制为 user.toml）
+  data\                 运行时数据（数据库、校准文件等，自动创建）
 
 安装版（推荐）：
-  dist\AntiSmurf-Memory-Setup-$Version.exe
+  dist\AntiSmurf-Setup-$Version.exe
 
 构建时间：$(Get-Date -Format 'yyyy-MM-dd HH:mm')
 "@
@@ -95,7 +95,7 @@ Remove-Item $Staging -Recurse -Force
 
 Write-Host ""
 Write-Host "Release artifacts (dist\):" -ForegroundColor Green
-Write-Host "  Portable exe:  dist\AntiSmurf-Memory.exe"
-Write-Host "  Portable zip:  dist\AntiSmurf-Memory-$Version-portable.zip"
-Write-Host "  Installer:     dist\AntiSmurf-Memory-Setup-$Version.exe"
+Write-Host "  Portable exe:  dist\AntiSmurf.exe"
+Write-Host "  Portable zip:  dist\AntiSmurf-$Version-portable.zip"
+Write-Host "  Installer:     dist\AntiSmurf-Setup-$Version.exe"
 Write-Host "Done." -ForegroundColor Green

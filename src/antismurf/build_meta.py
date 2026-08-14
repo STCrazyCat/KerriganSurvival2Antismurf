@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 BUILD_FLAVOR: str = "memory"
-BUILD_VERSION: str = "1.4.0"
+BUILD_VERSION: str = "1.4.1"
 AUTO_KICK_ENABLED: bool = True
 MEMORY_SCAN_AVAILABLE: bool = True
-APP_EXE_BASENAME: str = "AntiSmurf-Memory"
-APP_DISPLAY_NAME: str = "AntiSmurf (内存扫描)"
-INSTALLER_BASENAME: str = "AntiSmurf-Memory-Setup"
+APP_EXE_BASENAME: str = "AntiSmurf"
+APP_DISPLAY_NAME: str = "AntiSmurf"
+INSTALLER_BASENAME: str = "AntiSmurf-Setup"

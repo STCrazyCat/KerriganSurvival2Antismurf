@@ -25,24 +25,17 @@ Requirements:
 
 ```powershell
 cd AntiSmurf
-# 本地开发默认打「内存扫描」安装包（见 docs/BRANCHES.md）
-.\scripts\build_installer.ps1
-
-# 公开发布（无内存扫描 UI）
-.\scripts\build_installer.ps1 -Flavor standard
-
-# 同时打出 standard + memory 两个安装包
-.\scripts\build_installer.ps1 -AllFlavors
+# 构建便携版 + 安装包（自动踢人启用,见 docs/BRANCHES.md）
+.\scripts\build_installer.ps1 -EnableAutoKick
 ```
 
 Outputs:
 
 | File | Description |
 |------|-------------|
-| `dist/AntiSmurf-Memory.exe` | 内存扫描版便携包（本地默认） |
-| `dist/AntiSmurf-Memory-Setup-x.y.z.exe` | 内存扫描版安装包 |
-| `dist/AntiSmurf.exe` | 标准版便携包（`-Flavor standard`） |
-| `dist/AntiSmurf-Setup-x.y.z.exe` | 标准版安装包 |
+| `dist/AntiSmurf.exe` | 便携版主程序 |
+| `dist/AntiSmurf-Setup-x.y.z.exe` | 安装包 |
+| `dist/AntiSmurf-x.y.z-portable.zip` | 便携压缩包 |
 
 Optional: set GitHub URL baked into installer metadata:
 

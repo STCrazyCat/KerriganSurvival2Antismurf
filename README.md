@@ -13,12 +13,16 @@
 
 ## 功能
 
-- **PaddleOCR 视觉识别**：自动识别大厅地图名与玩家 ID（支持 `<#战队>#玩家ID` 格式）
-- 进入 KS2 房间后自动评分，极高嫌疑可自动踢人
-- 自动索引最近 100 场本地 KS2 录像，识别句柄并加载战绩用于二次评估
-- 结合 KS2 Wiki / 社区 MMR / MMR_playlike 进行首轮嫌疑评估
-- 高嫌疑玩家支持手动查看档案、踢出、加白名单
-- 默认 Dry Run，不实际踢人
+- **内存模式 6 大厅识别**：直接读取 SC2 内存中的房间成员结构（句柄 / 昵称 / 战队 / 阵营 MMR / playlike），无需 OCR
+- **句柄位置自适应**：游戏版本更新导致固定跳转失效时，自动/手动在主机句柄附近嗅探多格式存储，结合附近结构信息（profile_id / struct 头 / 显示名）确认新位置并自动持久化
+- 进入 KS2 房间后自动评分，极高嫌疑可自动踢人；默认 Dry Run 不实际踢人
+- **评分规则系统**：可视化表达式编辑器 + AI 助手（填 API Key 自然语言生成规则）+ 本地 IDE 编辑 + 规则包导入导出
+- **同局窥屏者检测**：与主机同一对局（分钟级）且凯瑞甘阵营 MMR 异常升高时 +20 分/次，并弹窗通知（对象 / 次数 / 原因）
+- **白名单模式**：一键切换为仅保留白名单玩家（自动踢出其余玩家）；支持批量白名单输入（自动识别分隔符并补全句柄前缀）
+- **分数着色**：正分红 / 负分绿 / 零分白，可在设置中自定义
+- 一键拉黑 +200 嫌疑分；结合 KS2 Wiki / 社区 MMR / playlike 进行嫌疑评估
+- 自动索引本地 KS2 录像识别句柄并加载战绩用于二次评估
+- 高嫌疑玩家支持手动查看档案、踢出、加白名单、降级
 
 ## 分发方式
 
@@ -417,33 +421,26 @@ y = 0.35
 2. 在项目根目录执行：
 
 ```powershell
-# 本地开发默认：内存扫描版（含「内存扫描」开关，与 standard 功能相同）
-.\scripts\build_installer.ps1
-
-# 公开发布：标准版（无内存扫描）
-.\scripts\build_installer.ps1 -Flavor standard
-
-# 同时生成两个安装包
-.\scripts\build_installer.ps1 -AllFlavors
+# 构建便携版 + 安装包（自动踢人启用）
+.\scripts\build_installer.ps1 -EnableAutoKick
 ```
 
-分支与风味说明见 [docs/BRANCHES.md](docs/BRANCHES.md)。
+分支说明见 [docs/BRANCHES.md](docs/BRANCHES.md)。
 
 输出：
-- `dist/AntiSmurf-Memory.exe` / `dist/AntiSmurf-Memory-Setup-x.y.z.exe` — **内存扫描版**（本地默认）
-- `dist/AntiSmurf.exe` / `dist/AntiSmurf-Setup-x.y.z.exe` — **标准版**
+- `dist/AntiSmurf.exe` — 便携版主程序
+- `dist/AntiSmurf-Setup-x.y.z.exe` — 安装包
+- `dist/AntiSmurf-x.y.z-portable.zip` — 便携压缩包
 
 若未安装 Inno Setup，脚本仍会生成便携版 exe，并提示如何单独编译安装包。
 
 ### 仅构建便携版 exe
 
 ```powershell
-python scripts/generate_build_meta.py memory   # 或 standard
-$env:ANTISMURF_BUILD_FLAVOR = "memory"
 python -m PyInstaller build.spec
 ```
 
-输出：`dist/AntiSmurf-Memory.exe` 或 `dist/AntiSmurf.exe`
+输出：`dist/AntiSmurf.exe`
 
 ### 安装后目录结构
 

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-08-14
+
+### Changed
+
+- **去除「内存扫描版」名称**：统一为 AntiSmurf 单一版本；产物名改为 `AntiSmurf.exe` / `AntiSmurf-Setup-x.y.z.exe` / `AntiSmurf-x.y.z-portable.zip`（窗口标题、安装包名称、README/docs 同步更新）
+- **安装包说明精简**：去除开源许可（LICENSE）相关内容，仅保留源代码 GitHub 地址
+- **功能说明优化**：README 功能列表补全（内存模式 6 大厅识别 / 句柄位置自适应 / 窥屏者检测 / 白名单模式 / 批量白名单 / AI 助手与 IDE 编辑规则 / 分数着色 / 一键拉黑等）
+
 ## [1.4.0] - 2026-08-14
 
 ### Added
@@ -153,7 +161,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows portable exe and Inno Setup installer build scripts
 - Local replay indexing, auto-upload hook, GUI calibration
 
-[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.1
 [1.4.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.0
 [1.3.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.3.1
 [1.3.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.3.0

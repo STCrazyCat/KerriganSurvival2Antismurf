@@ -1,12 +1,12 @@
-; AntiSmurf (Memory Scan) Windows installer (Inno Setup 6)
-; Build: scripts\build_installer.ps1 [-GrayRelease]
+; AntiSmurf Windows installer (Inno Setup 6)
+; Build: scripts\build_installer.ps1
 
-#define AppName "AntiSmurf (内存扫描)"
+#define AppName "AntiSmurf"
 #define AppPublisher "AntiSmurf"
 #ifndef AppURL
-  #define AppURL "https://github.com/YOUR_ORG/AntiSmurf"
+  #define AppURL "https://github.com/STCrazyCat/KerriganSurvival2Antismurf"
 #endif
-#define AppExeName "AntiSmurf-Memory.exe"
+#define AppExeName "AntiSmurf.exe"
 
 #ifndef AppVersion
   #define AppVersion "1.0.0"
@@ -24,12 +24,11 @@ AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
 AppSupportURL={#AppURL}
 AppUpdatesURL={#AppURL}
-DefaultDirName={autopf}\AntiSmurf-Memory
+DefaultDirName={autopf}\AntiSmurf
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
-LicenseFile=..\LICENSE
 OutputDir=..\dist
-OutputBaseFilename=AntiSmurf-Memory-Setup-{#AppVersion}
+OutputBaseFilename=AntiSmurf-Setup-{#AppVersion}
 SetupIconFile=
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -54,7 +53,6 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\dist\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 Source: "..\config\community_stub.json"; DestDir: "{app}\config"; Flags: onlyifdoesntexist
 Source: "..\config\user.toml.example"; DestDir: "{app}\config"; DestName: "user.toml.example"; Flags: ignoreversion
 Source: "..\config\blocklist.txt"; DestDir: "{app}\config"; Flags: onlyifdoesntexist

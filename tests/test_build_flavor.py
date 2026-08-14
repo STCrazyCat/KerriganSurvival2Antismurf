@@ -22,7 +22,8 @@ def test_generate_build_meta_memory_only(tmp_path: Path) -> None:
         importlib.reload(bm)
         assert bm.BUILD_FLAVOR == "memory"
         assert bm.MEMORY_SCAN_AVAILABLE is True
-        assert bm.APP_EXE_BASENAME == "AntiSmurf-Memory"
+        assert bm.APP_EXE_BASENAME == "AntiSmurf"
+        assert bm.INSTALLER_BASENAME == "AntiSmurf-Setup"
     finally:
         target.write_text(backup, encoding="utf-8")
         import antismurf.build_meta as bm2
