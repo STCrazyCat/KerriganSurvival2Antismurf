@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-08-14
+
+### Added
+
+- **嫌疑提示字体**：疑似小号（高嫌疑 / 一键拉黑标记）、黑名单用户、非白名单用户（白名单模式下）在主界面显示的名称以彩色标出，默认红色；可在「设置 → 嫌疑提示字体」自定义颜色（`suspect_name_color`）
+
 ## [1.4.1] - 2026-08-14
 
 ### Changed
@@ -161,7 +167,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows portable exe and Inno Setup installer build scripts
 - Local replay indexing, auto-upload hook, GUI calibration
 
-[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.4.2...HEAD
+[1.4.2]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.2
 [1.4.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.1
 [1.4.0]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.0
 [1.3.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.3.1

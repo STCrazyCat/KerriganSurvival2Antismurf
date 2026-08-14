@@ -77,6 +77,9 @@ class AppConfig:
     score_color_negative: str = "#57d957"  # -分(信任)绿色
     score_color_zero: str = "#ffffff"      # 0 分(中性)白色
 
+    # 嫌疑提示字体颜色:疑似小号 / 黑名单 / 非白名单(对应模式下)玩家名称着色
+    suspect_name_color: str = "#ff5c5c"    # 默认红色
+
     # 同局凯瑞甘 MMR 异常检测(识别窥屏者:与主机同局时评估 MMR 异常升高)
     same_match_kerrigan_spike_threshold: float = 400.0  # 异常升高阈值(反推核心−凯瑞甘核心)
     same_match_kerrigan_spike_score: float = 20.0  # 每次异常加分

@@ -42,6 +42,23 @@ TIER_LABELS = {
 }
 
 
+def suspect_name_color_for(record: PlayerRecord, config: AppConfig) -> str | None:
+    """嫌疑提示字体颜色:疑似小号(拉黑标记/高嫌疑)、黑名单、非白名单
+    (白名单模式下)的玩家名称着色,否则返回 None。"""
+    if record.tier in ("high", "critical"):
+        return config.suspect_name_color
+    if any(mark.handle == record.handle for mark in config.handle_mark_rules):
+        return config.suspect_name_color
+    if record.handle in config.blocklist_handles:
+        return config.suspect_name_color
+    if config.whitelist_mode and not record.whitelisted:
+        if not any(
+            trust.handle == record.handle for trust in config.handle_trust_rules
+        ):
+            return config.suspect_name_color
+    return None
+
+
 def _format_handle(record: PlayerRecord) -> str:
     if record.remark:
         return f"{record.handle} ({record.remark})"
@@ -535,6 +552,9 @@ class AntiSmurfApp(ctk.CTk):
         tier_lbl = labels["tier"]
         tier_lbl.configure(text_color=TIER_COLORS.get(record.tier, "white"))
         labels["score"].configure(text_color=score_color(record.score, self._config))
+        name_color = self._suspect_name_color(record)
+        if name_color:
+            labels["handle"].configure(text_color=name_color)
         return row
 
     def _create_list_only_row(self, record: PlayerRecord) -> ctk.CTkFrame:
@@ -585,7 +605,13 @@ class AntiSmurfApp(ctk.CTk):
         ).pack(side="left", padx=2)
         row._labels = labels  # type: ignore[attr-defined]
         labels["score"].configure(text_color=score_color(record.score, self._config))
+        name_color = self._suspect_name_color(record)
+        if name_color:
+            labels["nickname"].configure(text_color=name_color)
         return row
+
+    def _suspect_name_color(self, record: PlayerRecord) -> str | None:
+        return suspect_name_color_for(record, self._config)
 
     def _update_row(self, record: PlayerRecord) -> None:
         row = self._player_rows.get(record.handle)
@@ -597,6 +623,9 @@ class AntiSmurfApp(ctk.CTk):
             labels["handle"].configure(text=record.handle)
             labels["team"].configure(text=record.team_name or "-")
             labels["nickname"].configure(text=record.display_name or "-")
+            name_color = self._suspect_name_color(record)
+            if name_color:
+                labels["nickname"].configure(text_color=name_color)
             labels["s_mmr"].configure(text=stats["s_mmr"])
             labels["s_pl"].configure(text=stats["s_pl"])
             labels["k_mmr"].configure(text=stats["k_mmr"])
@@ -611,6 +640,9 @@ class AntiSmurfApp(ctk.CTk):
         mmr = record.community.mmr if record.community else None
         pl = record.community.mmr_playlike if record.community else None
         labels["handle"].configure(text=_format_handle(record))
+        name_color = self._suspect_name_color(record)
+        if name_color:
+            labels["handle"].configure(text_color=name_color)
         labels["profile_id"].configure(text=_format_player_id(record))
         labels["mmr"].configure(text=f"{mmr:.0f}" if mmr else "-")
         labels["pl"].configure(text=f"{pl:.0f}" if pl else "-")
