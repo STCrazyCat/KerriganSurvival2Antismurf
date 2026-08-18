@@ -41,6 +41,10 @@ _HELP_TEXT = """
 
 【评分规则说明】
 · 表达式规则：基于 MMR、PL、场次、抬升等自动计分（balanced 预设）。
+· 角色占比：可读取玩家 playlike 对局中的角色占比作为嫌疑分依据——
+  例如 role.share.Thakras >= 0.5 表示最近 20 场中 Thakras 占比过半；
+  手动指定多个角色用逗号分隔：role.share.Thakras,Zagara >= 0.6（合计占比）；
+  role.share_all.角色名 使用全部场次统计；roles.recent_count / roles.total_count 为场次数。
 · 手动标记 +100 / 信任 -20：按句柄精确加减，写入 config/user.toml。
 
 【初次使用 — UI 校准步骤】

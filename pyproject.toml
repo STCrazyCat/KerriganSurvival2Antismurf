@@ -1,6 +1,6 @@
 [project]
 name = "antismurf"
-version = "1.4.3"
+version = "1.4.4"
 description = "Kerrigan Survival 2 (KS2) lobby anti-smurf tool for StarCraft II hosts"
 readme = "README.md"
 license = { text = "MIT" }

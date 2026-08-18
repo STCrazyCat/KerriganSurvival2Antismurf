@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.4] - 2026-08-18
+
+### Added
+
+- **角色占比评分规则（playlike 场次）**：新增规则变量，读取玩家 playlike 对局中的角色占比作为嫌疑分判断——
+  - `role.share.角色名`：该角色在最近 20 场中的占比（0~1）
+  - `role.share.角色1,角色2,...`：手动指定多个角色，在最近 20 场中的合计占比
+  - `role.share_all.角色名`：该角色在全部场次中的占比（支持逗号分隔多角色）
+  - `roles.recent_count` / `roles.total_count`：最近场次数 / playlike 总场次数
+- **角色名归一化**：按角色分类表匹配，支持别名与空格/下划线差异（如 `Sir Roachington` ≡ `Sir_Roachington`）
+- **数据缺失保护**：无 playlike 对局数据时角色占比规则自动不触发，不误伤
+- 「使用说明」对话框补充角色占比变量语法说明
+
+### Changed
+
+- 规则编辑器变量目录新增「角色占比（playlike 场次）」分类，GUI 下拉可直接选用
+
 ## [1.4.3] - 2026-08-14
 
 ### Changed
@@ -174,7 +191,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows portable exe and Inno Setup installer build scripts
 - Local replay indexing, auto-upload hook, GUI calibration
 
-[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.4.3...HEAD
+[Unreleased]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/compare/v1.4.4...HEAD
+[1.4.4]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.4
 [1.4.3]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.3
 [1.4.2]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.2
 [1.4.1]: https://github.com/STCrazyCat/KerriganSurvival2Antismurf/releases/tag/v1.4.1

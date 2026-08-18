@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
+from antismurf.data.role_taxonomy import resolve_role
 from antismurf.models.evaluation import MatchSummary
 from antismurf.models.rating_profile import PlayerRatingProfile
 from antismurf.scoring.handle_rules import RuleHit
+
+# 角色占比按“最近 N 场 playlike 对局”统计的默认窗口大小。
+DEFAULT_PLAYLIKE_RECENT_WINDOW = 20
 
 VARIABLE_ALIASES: dict[str, str] = {
     "mmr.survivor": "core_mmr.survivor",
@@ -34,6 +39,10 @@ VARIABLE_CATALOG: dict[str, str] = {
     "role.mmr": "角色官方 MMR（输入 role.mmr.角色名）",
     "role.playlike": "角色 playlike 均值（输入 role.playlike.角色名）",
     "role.class_mmr": "角色 class MMR 偏移（输入 role.class_mmr.角色名）",
+    "role.share": "角色在最近 20 场中的占比（输入 role.share.角色名；多个角色用逗号分隔，如 role.share.Thakras,Zagara）",
+    "role.share_all": "角色在全部场次中的占比（输入 role.share_all.角色名；支持逗号分隔多角色）",
+    "roles.recent_count": "最近场次数（按日期取最近 20 场）",
+    "roles.total_count": "playlike 总场次数",
     "core_mmr.kerrigan": "凯瑞甘核心 MMR（同 mmr.kerrigan）",
     "core_mmr.survivor": "生存者核心 MMR（同 mmr.survivor）",
     "core_mmr.max": "核心 MMR 最大值",
@@ -79,6 +88,12 @@ VARIABLE_CATEGORIES: dict[str, list[str]] = {
         "role.mmr",
         "role.playlike",
         "role.class_mmr",
+    ],
+    "角色占比（playlike 场次）": [
+        "role.share",
+        "role.share_all",
+        "roles.recent_count",
+        "roles.total_count",
     ],
     "高级 / 扩展": [
         "lift.core_max",
@@ -145,6 +160,8 @@ class RuleContext:
     handle_constructed: bool = False
     handle_from_binding: bool = False
     ocr_digit_obfuscation: bool = False
+    # 角色占比统计的“最近场次”窗口大小（按 playlike 对局日期排序）。
+    playlike_recent_window: int = DEFAULT_PLAYLIKE_RECENT_WINDOW
 
 
 def _normalize_variable_path(path: str) -> str:
@@ -190,6 +207,18 @@ def resolve_variable(path: str, ctx: RuleContext) -> Any:
     if derived and path.startswith("role.playlike."):
         role_name = path[len("role.playlike.") :]
         return derived.playlike_avg_by_role.get(role_name)
+
+    if profile and path.startswith("role.share_all."):
+        return _role_share(profile, path[len("role.share_all.") :], window=None)
+    if profile and path.startswith("role.share."):
+        return _role_share(
+            profile, path[len("role.share.") :], window=ctx.playlike_recent_window
+        )
+    if profile:
+        if path == "roles.total_count":
+            return len(profile.playlike_games)
+        if path == "roles.recent_count":
+            return len(_recent_games(profile.playlike_games, ctx.playlike_recent_window))
 
     if path == "data.has_replay_binding":
         return ctx.has_replay_binding
@@ -254,6 +283,65 @@ def resolve_variable(path: str, ctx: RuleContext) -> Any:
     return mapping.get(path)
 
 
+def _date_sort_key(date_str: str) -> tuple[int, str]:
+    """可解析日期排前（按时间先后），无法解析的视为最旧。"""
+    text = (date_str or "").strip()
+    if not text:
+        return (1, "")
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+        try:
+            dt = datetime.strptime(text, fmt)
+            return (0, dt.isoformat())
+        except ValueError:
+            continue
+    return (1, text)
+
+
+def _recent_games(games: list[Any], window: int | None) -> list[Any]:
+    """取最近 `window` 场对局（按日期排序）；window 为空或 <=0 时返回全部。"""
+    if window is None or window <= 0 or len(games) <= window:
+        return list(games)
+    ordered = sorted(
+        games,
+        key=lambda g: _date_sort_key(str(getattr(g, "date", "") or "")),
+    )
+    return ordered[-window:]
+
+
+def _canonical_role_name(name: str) -> str:
+    """按角色分类表归一化角色名（处理别名与空格/下划线差异）。"""
+    tax = resolve_role(name)
+    return (tax.name if tax else name).strip().lower()
+
+
+def _role_share(
+    profile: PlayerRatingProfile,
+    roles_spec: str,
+    *,
+    window: int | None,
+) -> float | None:
+    """指定角色（或逗号分隔的角色组）在窗口内场次中的占比（0..1）。
+
+    无 playlike 对局数据时返回 None（规则不触发）。
+    """
+    roles = [part for part in (p.strip() for p in roles_spec.split(",")) if part]
+    if not roles:
+        return None
+    games = profile.playlike_games
+    if not games:
+        return None
+    recent = _recent_games(games, window)
+    if not recent:
+        return None
+    wanted = {_canonical_role_name(role) for role in roles}
+    hits = sum(
+        1
+        for game in recent
+        if _canonical_role_name(str(getattr(game, "role", "") or "")) in wanted
+    )
+    return round(hits / len(recent), 4)
+
+
 def _history_match_count(matches: list[MatchSummary] | None) -> int:
     if not matches:
         return 0
@@ -297,6 +385,9 @@ def _is_variable_ref(text: str) -> bool:
         "role.mmr.",
         "role.playlike.",
         "role.class_mmr.",
+        "role.share.",
+        "role.share_all.",
+        "roles.",
         "lift.",
         "growth.",
         "spike.",
